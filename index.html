@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>尾骨痣の章鱼uwu气泡生成器</title>
+    <meta name="theme-color" content="#F9F9F7">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #F9F9F7;
+            --panel-bg: #FFFFFF;
+            --text-main: #1A1C1A;
+            --text-muted: #8A8C8A;
+            --border-color: #EAEAEA;
+            --accent-color: #1A1C1A;
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: var(--font-sans);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex; flex-direction: column;
+            height: 100dvh; min-height: 100dvh; overflow: hidden;
+        }
+
+        h1, h2, h3 { font-family: var(--font-serif); font-weight: 400; margin: 0; }
+
+        .preview-section {
+            flex: 0 0 min(38dvh, 320px);
+            min-height: 220px;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#D5D5D5 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex; flex-direction: column;
+            border-bottom: 1px solid var(--border-color);
+            position: relative; z-index: 10;
+        }
+
+        .header-title { padding: 20px 20px 10px; }
+        .header-title h1 { font-size: 1.5rem; letter-spacing: -0.02em; font-weight: 600; }
+        .header-title p { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+
+        .mock-chat-area {
+            flex: 1; min-height: 0; padding: 15px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 15px;
+            scrollbar-width: none;
+        }
+        .mock-chat-area::-webkit-scrollbar { display: none; }
+
+        .message-wrapper { display: flex; flex-direction: column; }
+        .message-wrapper.received { align-items: flex-start; }
+        .message-wrapper.sent { align-items: flex-end; }
+        
+        .message-bubble {
+            max-width: 85%; padding: 12px 16px; font-size: 0.9rem; line-height: 1.5;
+            transition: all 0.1s ease; word-break: break-word; position: relative;
+            isolation: isolate;
+        }
+
+        .transfer-card {
+            width: 220px; background: #FFF; border: 1px solid #E5E5E5; border-radius: 12px; padding: 15px; transition: all 0.1s ease; position: relative;
+            isolation: isolate;
+        }
+        .transfer-card .amount { font-size: 1.5rem; font-weight: bold; margin: 10px 0; }
+        .transfer-card .desc { font-size: 0.8rem; color: #888; }
+
+        .bubble-text,
+        .transfer-content {
+            position: relative;
+            z-index: 2;
+            display: block;
+        }
+
+        .overlay-layer {
+            position: absolute;
+            inset: 0;
+            margin: -100px;
+            padding: 100px;
+            display: none;
+            pointer-events: none;
+            background-repeat: no-repeat;
+            background-position: 50% 50%;
+            background-size: 100%;
+        }
+
+        .overlay-layer.overlay-2 {
+            z-index: 3;
+        }
+
+        .overlay-layer.overlay-3 {
+            z-index: 4;
+        }
+
+        .image-bubble img { width: 160px; border-radius: 12px; transition: all 0.1s ease; display: block; }
+
+        .editor-section {
+            flex: 1; min-height: 0; background: var(--panel-bg); overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 20px calc(28px + env(safe-area-inset-bottom));
+        }
+
+        @media (max-width: 640px) {
+            .preview-section {
+                flex-basis: min(34dvh, 280px);
+                min-height: 180px;
+            }
+        }
+
+        .target-selector-wrap {
+            position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            padding: 10px 0; z-index: 20; border-bottom: 1px solid var(--border-color); margin-bottom: 15px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .target-top-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .target-action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        select.main-select {
+            flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;
+            background: #FAFAFA; font-family: var(--font-sans); font-size: 0.85rem; outline: none;
+        }
+
+        .btn-small {
+            padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: #FFF;
+            font-family: var(--font-sans); font-size: 0.75rem; cursor: pointer; color: var(--text-main);
+            white-space: nowrap; transition: all 0.2s;
+        }
+        
+        .btn-small:hover { background: #F0F0F0; }
+        .btn-small.danger { color: #d32f2f; }
+        .btn-small.active { background: #1A1C1A; color: #FFF; border-color: #1A1C1A; }
+
+        .btn:disabled, .btn-small:disabled, select:disabled, input:disabled, textarea:disabled {
+            opacity: 0.55; cursor: not-allowed;
+        }
+
+        details {
+            border-bottom: 1px solid var(--border-color); padding: 15px 0;
+        }
+        summary {
+            font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em;
+            cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
+        }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: '+'; font-size: 1.2rem; font-weight: 300; color: var(--text-muted); }
+        details[open] summary::after { content: '−'; }
+        
+        .details-content { padding-top: 15px; display: flex; flex-direction: column; gap: 15px; }
+
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
+        .control-group label { font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; }
+        .val-display { color: var(--accent-color); font-variant-numeric: tabular-nums; }
+
+        .flex-row { display: flex; align-items: center; gap: 15px; }
+        
+        input[type="color"] {
+            -webkit-appearance: none; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; padding: 0; background: none; flex-shrink: 0;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 50%; }
+
+        input[type="range"] {
+            flex-grow: 1; -webkit-appearance: none; height: 2px; background: var(--border-color); outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent-color); cursor: pointer;
+        }
+
+        input[type="text"], input[type="url"], select.sub-select {
+            width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: var(--font-sans); font-size: 0.85rem; background: #FFF;
+        }
+
+        .btn {
+            padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: transparent;
+            font-family: var(--font-sans); font-size: 0.85rem; cursor: pointer; text-align: center; transition: all 0.2s;
+        }
+        .btn.active {
+            background: var(--accent-color); color: #FFF; border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); transform: scale(1.02); font-weight: bold;
+        }
+        .btn-primary { background: var(--accent-color); color: #FFF; border: none; font-weight: 500; }
+        .btn-danger { background: #d32f2f; color: #FFF; border: none; font-weight: 500; }
+        
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .texture-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .texture-block {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            background: #FAFAFA;
+        }
+
+        .texture-block h4 {
+            margin: 0 0 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .export-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        textarea.css-output {
+            width: 100%; height: 160px; padding: 10px; background: #F5F5F5; border: none; border-radius: 8px;
+            font-family: monospace; font-size: 0.75rem; color: #555; resize: none;
+        }
+
+        @media (max-width: 640px) {
+            .export-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer {
+            text-align: center; padding: 30px 15px 40px; font-size: 0.7rem; color: var(--text-muted);
+            background: var(--panel-bg);
+        }
+
+        #history-modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
+            justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal-content {
+            background: #FFF; width: 100%; max-width: 400px; max-height: 80vh; border-radius: 16px;
+            padding: 20px; display: flex; flex-direction: column;
+        }
+        .history-log { flex: 1; overflow-y: auto; font-family: monospace; font-size: 0.7rem; color: #666; background: #F9F9F9; padding: 10px; border-radius: 8px; margin: 15px 0; white-space: pre-wrap; }
+
+    </style>
+</head>
+<body>
+
+    <div class="preview-section">
+        <div class="header-title">
+            <h1>尾骨痣の章鱼uwu气泡生成器</h1>
+            <p>极简美学 · 自由定制</p>
+        </div>
+
+        <div class="mock-chat-area" id="preview-container">
+            <div class="message-wrapper received">
+                <div class="message-bubble received" id="preview-received">
+                    <span class="bubble-text">这是一条极简风格的测试消息。留白即是高级。</span>
+                    <span class="overlay-layer overlay-2" id="preview-received-overlay-2"></span>
+                    <span class="overlay-layer overlay-3" id="preview-received-overlay-3"></span>
+                </div>
+            </div>
+            <div class="message-wrapper sent">
+                <div class="message-bubble sent" id="preview-sent">
+                    <span class="bubble-text">I completely agree. Less is more.</span>
+                    <span class="overlay-layer overlay-2" id="preview-sent-overlay-2"></span>
+                    <span class="overlay-layer overlay-3" id="preview-sent-overlay-3"></span>
+                </div>
+            </div>
+            <div class="message-wrapper received">
+                <div class="transfer-card" id="preview-transfer-received">
+                    <div class="transfer-content">
+                        <div style="font-size: 0.8rem; color: #888;">转账给您</div>
+                        <div class="amount">¥ 520.00</div>
+                        <div class="desc">节日快乐</div>
+                    </div>
+                    <span class="overlay-layer overlay-2" id="preview-transfer-received-overlay-2"></span>
+                    <span class="overlay-layer overlay-3" id="preview-transfer-received-overlay-3"></span>
+                </div>
+            </div>
+            <div class="message-wrapper sent">
+                <div class="transfer-card" id="preview-transfer-sent">
+                    <div class="transfer-content">
+                        <div style="font-size: 0.8rem; color: #888;">您发起转账</div>
+                        <div class="amount">¥ 520.00</div>
+                        <div class="desc">节日快乐</div>
+                    </div>
+                    <span class="overlay-layer overlay-2" id="preview-transfer-sent-overlay-2"></span>
+                    <span class="overlay-layer overlay-3" id="preview-transfer-sent-overlay-3"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="editor-section">
+        
+        <div class="target-selector-wrap">
+            <div class="target-top-row">
+                <select id="target-selector" class="main-select" onchange="loadStateToUI()">
+                    <option value=".message-bubble.received">编辑：对方气泡</option>
+                    <option value=".message-bubble.sent">编辑：我方气泡</option>
+                    <option value=".transfer-card">编辑：转账卡片</option>
+                </select>
+                <button class="btn-small danger" id="btn-reset" onclick="resetCurrentState()">重置</button>
+            </div>
+            <div class="target-action-row">
+                <button class="btn-small" onclick="undoState()">撤销</button>
+                <button class="btn-small" onclick="redoState()">重做</button>
+                <button class="btn-small" id="btn-copy-style" onclick="copyStyleToOther()">复制样式到另一方</button>
+                <button class="btn-small" id="btn-toggle-global-lock" onclick="toggleGlobalLock()">全局锁定</button>
+                <button class="btn-small" onclick="exportJSON()">导出配置</button>
+                <button class="btn-small" onclick="document.getElementById('import-json-upload').click()">导入配置</button>
+                <input type="file" id="import-json-upload" accept=".json" style="display: none;" onchange="importJSON(event)">
+            </div>
+        </div>
+
+        <details open>
+            <summary>官方风格预设</summary>
+            <div class="details-content preset-grid">
+                <button class="btn preset-btn" id="btn-minimal" onclick="applyPreset('minimal')">极简纯色</button>
+                <button class="btn preset-btn" id="btn-glass" onclick="applyPreset('glass')">磨砂玻璃</button>
+                <button class="btn preset-btn" id="btn-magazine" onclick="applyPreset('magazine')">杂志线框</button>
+                <button class="btn preset-btn" id="btn-neumorphism" onclick="applyPreset('neumorphism')">新拟态</button>
+            </div>
+        </details>
+
+        <details>
+            <summary>我的自定义预设</summary>
+            <div class="details-content">
+                <div class="control-group">
+                    <label>保存当前所有设置为新预设</label>
+                    <div class="flex-row">
+                        <input type="text" id="custom-preset-name" placeholder="输入预设名称">
+                        <button class="btn btn-primary" onclick="saveCustomPreset()" style="width: 80px;">保存</button>
+                    </div>
+                </div>
+                <div class="control-group" style="margin-top: 10px;">
+                    <label>加载或删除已保存的预设</label>
+                    <select id="custom-preset-list" class="sub-select">
+                        <option value="">-- 请选择预设 --</option>
+                    </select>
+                    <div class="preset-grid" style="margin-top: 5px;">
+                        <button class="btn" id="btn-load-custom-preset" onclick="loadCustomPreset()">加载预设</button>
+                        <button class="btn btn-danger" onclick="deleteCustomPreset()">删除预设</button>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>颜色与背景</summary>
+            <div class="details-content">
+                <div class="control-group">
+                    <label>背景色 1</label>
+                    <div class="flex-row">
+                        <input type="color" id="ctrl-bg-color" onchange="updateState()">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>背景透明度 <span class="val-display" id="val-bg-opacity">1</span></label>
+                    <input type="range" id="ctrl-bg-opacity" min="0" max="1" step="0.05" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>背景色 2 (开启渐变) <input type="checkbox" id="ctrl-use-gradient" onchange="updateState()"></label>
+                    <div class="flex-row">
+                        <input type="color" id="ctrl-bg-color2" onchange="updateState()">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>毛玻璃模糊度 <span class="val-display" id="val-blur">0px</span></label>
+                    <input type="range" id="ctrl-blur" min="0" max="30" step="1" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>背景混合模式</label>
+                    <select id="ctrl-blend-mode" class="sub-select" onchange="updateState()">
+                        <option value="normal">正常 (Normal)</option>
+                        <option value="multiply">正片叠底 (Multiply)</option>
+                        <option value="screen">滤色 (Screen)</option>
+                        <option value="overlay">叠加 (Overlay)</option>
+                        <option value="soft-light">柔光 (Soft Light)</option>
+                        <option value="hard-light">强光 (Hard Light)</option>
+                        <option value="darken">变暗 (Darken)</option>
+                        <option value="lighten">变亮 (Lighten)</option>
+                    </select>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>贴图与图像</summary>
+            <div class="details-content texture-grid">
+                <div class="texture-block">
+                    <h4>贴图 1：背景层</h4>
+                    <div class="control-group">
+                        <label>贴图 URL</label>
+                        <input type="url" id="ctrl-bg-image-1" placeholder="https://..." oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>或 本地上传贴图</label>
+                        <input type="file" id="ctrl-bg-upload-1" accept="image/*" style="font-size: 0.8rem;">
+                    </div>
+                    <div class="control-group">
+                        <label>贴图缩放大小 <span class="val-display" id="val-bg-size-1">100%</span></label>
+                        <input type="range" id="ctrl-bg-size-1" min="0" max="300" step="1" value="100" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>贴图水平位置 (X轴) <span class="val-display" id="val-bg-x-1">50%</span></label>
+                        <input type="range" id="ctrl-bg-x-1" min="-50" max="150" step="1" value="50" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>贴图垂直位置 (Y轴) <span class="val-display" id="val-bg-y-1">50%</span></label>
+                        <input type="range" id="ctrl-bg-y-1" min="-50" max="150" step="1" value="50" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>平铺方式</label>
+                        <select id="ctrl-bg-repeat-1" class="sub-select" onchange="updateState()">
+                            <option value="no-repeat">不平铺</option>
+                            <option value="repeat">平铺</option>
+                            <option value="repeat-x">横向平铺</option>
+                            <option value="repeat-y">纵向平铺</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="texture-block">
+                    <h4>贴图 2：上层覆盖</h4>
+                    <div class="control-group">
+                        <label>贴图 URL</label>
+                        <input type="url" id="ctrl-bg-image-2" placeholder="https://..." oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>或 本地上传贴图</label>
+                        <input type="file" id="ctrl-bg-upload-2" accept="image/*" style="font-size: 0.8rem;">
+                    </div>
+                    <div class="control-group">
+                        <label>透明度 <span class="val-display" id="val-bg-opacity-2">1</span></label>
+                        <input type="range" id="ctrl-bg-opacity-2" min="0" max="1" step="0.05" value="1" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>旋转角度 <span class="val-display" id="val-bg-rotate-2">0°</span></label>
+                        <input type="range" id="ctrl-bg-rotate-2" min="-180" max="180" step="1" value="0" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>贴图缩放大小 <span class="val-display" id="val-bg-size-2">100%</span></label>
+                        <input type="range" id="ctrl-bg-size-2" min="0" max="300" step="1" value="100" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>贴图水平位置 (X轴) <span class="val-display" id="val-bg-x-2">50%</span></label>
+                        <input type="range" id="ctrl-bg-x-2" min="-150" max="250" step="1" value="50" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>贴图垂直位置 (Y轴) <span class="val-display" id="val-bg-y-2">50%</span></label>
+                        <input type="range" id="ctrl-bg-y-2" min="-150" max="250" step="1" value="50" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>平铺方式</label>
+                        <select id="ctrl-bg-repeat-2" class="sub-select" onchange="updateState()">
+                            <option value="no-repeat">不平铺</option>
+                            <option value="repeat">平铺</option>
+                            <option value="repeat-x">横向平铺</option>
+                            <option value="repeat-y">纵向平铺</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="texture-block">
+                    <h4>贴图 3：最高覆盖</h4>
+                    <div class="control-group">
+                        <label>贴图 URL</label>
+                        <input type="url" id="ctrl-bg-image-3" placeholder="https://..." oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>或 本地上传贴图</label>
+                        <input type="file" id="ctrl-bg-upload-3" accept="image/*" style="font-size: 0.8rem;">
+                    </div>
+                    <div class="control-group">
+                        <label>透明度 <span class="val-display" id="val-bg-opacity-3">1</span></label>
+                        <input type="range" id="ctrl-bg-opacity-3" min="0" max="1" step="0.05" value="1" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>旋转角度 <span class="val-display" id="val-bg-rotate-3">0°</span></label>
+                        <input type="range" id="ctrl-bg-rotate-3" min="-180" max="180" step="1" value="0" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>贴图缩放大小 <span class="val-display" id="val-bg-size-3">100%</span></label>
+                        <input type="range" id="ctrl-bg-size-3" min="0" max="300" step="1" value="100" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>贴图水平位置 (X轴) <span class="val-display" id="val-bg-x-3">50%</span></label>
+                        <input type="range" id="ctrl-bg-x-3" min="-150" max="250" step="1" value="50" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>贴图垂直位置 (Y轴) <span class="val-display" id="val-bg-y-3">50%</span></label>
+                        <input type="range" id="ctrl-bg-y-3" min="-150" max="250" step="1" value="50" oninput="updateState()">
+                    </div>
+                    <div class="control-group">
+                        <label>平铺方式</label>
+                        <select id="ctrl-bg-repeat-3" class="sub-select" onchange="updateState()">
+                            <option value="no-repeat">不平铺</option>
+                            <option value="repeat">平铺</option>
+                            <option value="repeat-x">横向平铺</option>
+                            <option value="repeat-y">纵向平铺</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>边框与间距</summary>
+            <div class="details-content">
+                <div class="control-group">
+                    <label>最大宽度 <span class="val-display" id="val-max-width">85%</span></label>
+                    <input type="range" id="ctrl-max-width" min="30" max="100" step="1" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>圆角大小 <span class="val-display" id="val-radius">15px</span></label>
+                    <input type="range" id="ctrl-radius" min="0" max="40" step="1" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>内边距厚度 <span class="val-display" id="val-padding">12px</span></label>
+                    <input type="range" id="ctrl-padding" min="0" max="40" step="1" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>边框厚度 & 颜色 <span class="val-display" id="val-border-width">0px</span></label>
+                    <div class="flex-row">
+                        <input type="color" id="ctrl-border-color" onchange="updateState()">
+                        <input type="range" id="ctrl-border-width" min="0" max="10" step="1" oninput="updateState()">
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>阴影与排版</summary>
+            <div class="details-content">
+                <div class="control-group">
+                    <label>文字颜色</label>
+                    <input type="color" id="ctrl-text-color" onchange="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>字体大小 <span class="val-display" id="val-font-size">0.9rem</span></label>
+                    <input type="range" id="ctrl-font-size" min="0.5" max="1.5" step="0.05" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>文字阴影模糊度 <span class="val-display" id="val-text-shadow">0px</span></label>
+                    <div class="flex-row">
+                        <input type="color" id="ctrl-text-shadow-color" onchange="updateState()">
+                        <input type="range" id="ctrl-text-shadow" min="0" max="10" step="1" oninput="updateState()">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>字重粗细 <span class="val-display" id="val-weight">400</span></label>
+                    <input type="range" id="ctrl-weight" min="300" max="800" step="100" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>字间距 <span class="val-display" id="val-spacing">0px</span></label>
+                    <input type="range" id="ctrl-spacing" min="-2" max="5" step="0.5" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>行高 <span class="val-display" id="val-line-height">1.5</span></label>
+                    <input type="range" id="ctrl-line-height" min="1" max="2.5" step="0.1" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>启用盒子阴影 <input type="checkbox" id="ctrl-enable-shadow" onchange="updateState()"></label>
+                </div>
+                <div class="control-group">
+                    <label>盒子阴影颜色</label>
+                    <input type="color" id="ctrl-shadow-color" onchange="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>盒子阴影模糊度 <span class="val-display" id="val-shadow-blur">0px</span></label>
+                    <input type="range" id="ctrl-shadow-blur" min="0" max="30" step="1" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>盒子阴影 X/Y 偏移 <span class="val-display" id="val-shadow-xy">0px, 4px</span></label>
+                    <div class="flex-row">
+                        <input type="range" id="ctrl-shadow-x" min="-20" max="20" step="1" oninput="updateState()">
+                        <input type="range" id="ctrl-shadow-y" min="-20" max="20" step="1" oninput="updateState()">
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details open>
+            <summary>导出与防鉴抄</summary>
+            <div class="details-content">
+                <textarea class="css-output" id="css-output" oninput="handleCSSEdit()"></textarea>
+                <div class="export-grid">
+                    <button class="btn btn-primary" onclick="copyCSS()">复制 CSS</button>
+                    <button class="btn" onclick="exportCSSFile()">导出 CSS 文本</button>
+                    <button class="btn" onclick="showHistory()">防鉴抄日志</button>
+                </div>
+            </div>
+        </details>
+
+        <div class="footer">
+            尾骨痣 の章鱼uwu气泡生成器出品<br>联系方式: 171519582
+        </div>
+
+    </div>
+
+    <div id="history-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 10px;">原创防鉴抄日志</h3>
+            <p style="font-size: 0.75rem; color: #888;">记录了您每一次参数调整的时间戳，可作为原创证明。</p>
+            <div class="history-log" id="history-log-content"></div>
+            <div class="preset-grid">
+                <button class="btn btn-primary" onclick="exportHistory()">导出 TXT</button>
+                <button class="btn" onclick="document.getElementById('history-modal').style.display='none'">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+            });
+        }
+
+        const historyLog = [];
+        function logAction(action, details) {
+            const time = new Date().toLocaleTimeString();
+            historyLog.push(`[${time}] ${action}: ${details}`);
+        }
+
+        function createDefaultTextures() {
+            return [
+                { image: '', size: 100, x: 50, y: 50, repeat: 'no-repeat', opacity: 1, rotate: 0 },
+                { image: '', size: 100, x: 50, y: 50, repeat: 'no-repeat', opacity: 1, rotate: 0 },
+                { image: '', size: 100, x: 50, y: 50, repeat: 'no-repeat', opacity: 1, rotate: 0 }
+            ];
+        }
+
+        function cloneDefaultState() {
+            return {
+                bgColor: '#ffffff', bgColor2: '#f0f0f0', useGradient: false, bgOpacity: 1, blur: 0, blendMode: 'normal',
+                textures: createDefaultTextures(),
+                textColor: '#333333', textShadowColor: '#000000', textShadow: 0, weight: 400, spacing: 0, lineHeight: 1.5, fontSize: 0.9,
+                borderWidth: 0, borderColor: '#000000', radius: 15, padding: 12, maxWidth: 85,
+                enableShadow: true, shadowBlur: 0, shadowX: 0, shadowY: 4, shadowColor: '#000000', shadowOpacity: 0.1
+            };
+        }
+
+        function normalizeState(rawState = {}) {
+            const state = cloneDefaultState();
+            Object.keys(state).forEach(key => {
+                if (rawState[key] !== undefined && key !== 'textures') state[key] = rawState[key];
+            });
+            if (Array.isArray(rawState.textures)) {
+                state.textures = createDefaultTextures().map((layer, index) => ({ ...layer, ...(rawState.textures[index] || {}) }));
+            }
+            return state;
+        }
+
+        let states = {
+            '.message-bubble.received': normalizeState({ bgColor: '#ffffff', textColor: '#333333' }),
+            '.message-bubble.sent': normalizeState({ bgColor: '#1A1C1A', textColor: '#ffffff' }),
+            '.transfer-card': normalizeState({ bgColor: '#ffffff', radius: 12, padding: 15, maxWidth: 100 })
+        };
+
+        let historyStack = [];
+        let historyIndex = -1;
+
+        function saveHistory() {
+            if (historyIndex < historyStack.length - 1) historyStack = historyStack.slice(0, historyIndex + 1);
+            historyStack.push(JSON.stringify(states));
+            if (historyStack.length > 20) historyStack.shift();
+            else historyIndex++;
+        }
+
+        function undoState() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                states = JSON.parse(historyStack[historyIndex]);
+                loadStateToUI(); renderPreviewAndCSS();
+            }
+        }
+
+        function redoState() {
+            if (historyIndex < historyStack.length - 1) {
+                historyIndex++;
+                states = JSON.parse(historyStack[historyIndex]);
+                loadStateToUI(); renderPreviewAndCSS();
+            }
+        }
+
+        let lockState = { global: false };
+
+        const els = {
+            target: document.getElementById('target-selector'),
+            bgColor: document.getElementById('ctrl-bg-color'), bgColor2: document.getElementById('ctrl-bg-color2'),
+            useGradient: document.getElementById('ctrl-use-gradient'), bgOpacity: document.getElementById('ctrl-bg-opacity'),
+            blur: document.getElementById('ctrl-blur'), blendMode: document.getElementById('ctrl-blend-mode'),
+            bgImages: [document.getElementById('ctrl-bg-image-1'), document.getElementById('ctrl-bg-image-2'), document.getElementById('ctrl-bg-image-3')],
+            bgUploads: [document.getElementById('ctrl-bg-upload-1'), document.getElementById('ctrl-bg-upload-2'), document.getElementById('ctrl-bg-upload-3')],
+            bgSizes: [document.getElementById('ctrl-bg-size-1'), document.getElementById('ctrl-bg-size-2'), document.getElementById('ctrl-bg-size-3')],
+            bgXs: [document.getElementById('ctrl-bg-x-1'), document.getElementById('ctrl-bg-x-2'), document.getElementById('ctrl-bg-x-3')],
+            bgYs: [document.getElementById('ctrl-bg-y-1'), document.getElementById('ctrl-bg-y-2'), document.getElementById('ctrl-bg-y-3')],
+            bgRepeats: [document.getElementById('ctrl-bg-repeat-1'), document.getElementById('ctrl-bg-repeat-2'), document.getElementById('ctrl-bg-repeat-3')],
+            bgOpacities: [null, document.getElementById('ctrl-bg-opacity-2'), document.getElementById('ctrl-bg-opacity-3')],
+            bgRotates: [null, document.getElementById('ctrl-bg-rotate-2'), document.getElementById('ctrl-bg-rotate-3')],
+            textColor: document.getElementById('ctrl-text-color'), textShadowColor: document.getElementById('ctrl-text-shadow-color'),
+            textShadow: document.getElementById('ctrl-text-shadow'), weight: document.getElementById('ctrl-weight'),
+            spacing: document.getElementById('ctrl-spacing'), lineHeight: document.getElementById('ctrl-line-height'),
+            fontSize: document.getElementById('ctrl-font-size'), borderWidth: document.getElementById('ctrl-border-width'),
+            borderColor: document.getElementById('ctrl-border-color'), radius: document.getElementById('ctrl-radius'),
+            padding: document.getElementById('ctrl-padding'), maxWidth: document.getElementById('ctrl-max-width'),
+            enableShadow: document.getElementById('ctrl-enable-shadow'), shadowColor: document.getElementById('ctrl-shadow-color'),
+            shadowBlur: document.getElementById('ctrl-shadow-blur'), shadowX: document.getElementById('ctrl-shadow-x'),
+            shadowY: document.getElementById('ctrl-shadow-y'), cssOutput: document.getElementById('css-output'),
+            btnToggleGlobalLock: document.getElementById('btn-toggle-global-lock')
+        };
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); };
+        }
+
+        function toggleGlobalLock() {
+            lockState.global = !lockState.global;
+            els.btnToggleGlobalLock.textContent = lockState.global ? '全局锁定：开' : '全局锁定';
+            els.btnToggleGlobalLock.classList.toggle('active', lockState.global);
+        }
+
+        function loadStateToUI() {
+            const state = states[els.target.value];
+            els.bgColor.value = state.bgColor; els.bgColor2.value = state.bgColor2;
+            els.useGradient.checked = state.useGradient; els.bgOpacity.value = state.bgOpacity;
+            els.blur.value = state.blur; els.blendMode.value = state.blendMode;
+
+            state.textures.forEach((layer, index) => {
+                els.bgImages[index].value = layer.image; els.bgSizes[index].value = layer.size;
+                els.bgXs[index].value = layer.x; els.bgYs[index].value = layer.y; els.bgRepeats[index].value = layer.repeat;
+                if (index > 0) { els.bgOpacities[index].value = layer.opacity; els.bgRotates[index].value = layer.rotate; }
+                if (els.bgUploads[index]) els.bgUploads[index].value = ''; // 修复切换目标后无法重复上传的毒瘤
+            });
+
+            els.textColor.value = state.textColor; els.textShadowColor.value = state.textShadowColor;
+            els.textShadow.value = state.textShadow; els.weight.value = state.weight; els.spacing.value = state.spacing;
+            els.lineHeight.value = state.lineHeight; els.fontSize.value = state.fontSize; els.borderWidth.value = state.borderWidth;
+            els.borderColor.value = state.borderColor; els.radius.value = state.radius; els.padding.value = state.padding;
+            els.maxWidth.value = state.maxWidth; els.enableShadow.checked = state.enableShadow;
+            els.shadowColor.value = state.shadowColor; els.shadowBlur.value = state.shadowBlur;
+            els.shadowX.value = state.shadowX; els.shadowY.value = state.shadowY;
+
+            updateValueDisplays(state);
+        }
+
+        function updateValueDisplays(state) {
+            document.getElementById('val-bg-opacity').innerText = state.bgOpacity;
+            document.getElementById('val-blur').innerText = state.blur + 'px';
+            document.getElementById('val-text-shadow').innerText = state.textShadow + 'px';
+            document.getElementById('val-weight').innerText = state.weight;
+            document.getElementById('val-spacing').innerText = state.spacing + 'px';
+            document.getElementById('val-line-height').innerText = state.lineHeight;
+            document.getElementById('val-font-size').innerText = state.fontSize + 'rem';
+            document.getElementById('val-border-width').innerText = state.borderWidth + 'px';
+            document.getElementById('val-radius').innerText = state.radius + 'px';
+            document.getElementById('val-padding').innerText = state.padding + 'px';
+            document.getElementById('val-max-width').innerText = state.maxWidth + '%';
+            document.getElementById('val-shadow-blur').innerText = state.shadowBlur + 'px';
+            document.getElementById('val-shadow-xy').innerText = `${state.shadowX}px, ${state.shadowY}px`;
+
+            state.textures.forEach((layer, index) => {
+                document.getElementById(`val-bg-size-${index + 1}`).innerText = layer.size + '%';
+                document.getElementById(`val-bg-x-${index + 1}`).innerText = layer.x + '%';
+                document.getElementById(`val-bg-y-${index + 1}`).innerText = layer.y + '%';
+                if (index > 0) {
+                    document.getElementById(`val-bg-opacity-${index + 1}`).innerText = layer.opacity;
+                    document.getElementById(`val-bg-rotate-${index + 1}`).innerText = layer.rotate + '°';
+                }
+            });
+        }
+
+        function updateState() {
+            if (lockState.global) return loadStateToUI();
+            const target = els.target.value; const state = states[target];
+
+            state.bgColor = els.bgColor.value; state.bgColor2 = els.bgColor2.value;
+            state.useGradient = els.useGradient.checked; state.bgOpacity = Number(els.bgOpacity.value);
+            state.blur = Number(els.blur.value); state.blendMode = els.blendMode.value;
+
+            state.textures = state.textures.map((layer, index) => {
+                // 毒瘤修复：如果输入框显示的是本地图片提示，则保留原有的图片数据，否则使用输入框的新URL
+                const currentInputValue = els.bgImages[index].value;
+                const finalImage = currentInputValue === '[本地图片已上传]' ? layer.image : currentInputValue;
+                
+                return {
+                    ...layer, image: finalImage, size: Number(els.bgSizes[index].value),
+                    x: Number(els.bgXs[index].value), y: Number(els.bgYs[index].value), repeat: els.bgRepeats[index].value,
+                    opacity: index > 0 ? Number(els.bgOpacities[index].value) : 1, rotate: index > 0 ? Number(els.bgRotates[index].value) : 0
+                };
+            });
+
+            state.textColor = els.textColor.value; state.textShadowColor = els.textShadowColor.value;
+            state.textShadow = Number(els.textShadow.value); state.weight = Number(els.weight.value);
+            state.spacing = Number(els.spacing.value); state.lineHeight = Number(els.lineHeight.value);
+            state.fontSize = Number(els.fontSize.value); state.borderWidth = Number(els.borderWidth.value);
+            state.borderColor = els.borderColor.value; state.radius = Number(els.radius.value);
+            state.padding = Number(els.padding.value); state.maxWidth = Number(els.maxWidth.value);
+            state.enableShadow = els.enableShadow.checked; state.shadowColor = els.shadowColor.value;
+            state.shadowBlur = Number(els.shadowBlur.value); state.shadowX = Number(els.shadowX.value);
+            state.shadowY = Number(els.shadowY.value);
+
+            updateValueDisplays(state); debouncedRender();
+        }
+
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function applyOverlayPreview(targetId, overlayIndex, layer, blendMode) {
+            const overlayEl = document.getElementById(`${targetId}-overlay-${overlayIndex}`);
+            if (!overlayEl) return;
+            if (!layer.image || layer.image.trim() === '') { overlayEl.style.display = 'none'; return; }
+            overlayEl.style.display = 'block';
+            overlayEl.style.backgroundImage = `url('${layer.image.replace(/'/g, "\\'")}')`;
+            overlayEl.style.backgroundSize = `${layer.size}%`;
+            overlayEl.style.backgroundPosition = `${layer.x}% ${layer.y}%`;
+            overlayEl.style.backgroundRepeat = layer.repeat;
+            overlayEl.style.mixBlendMode = blendMode;
+            overlayEl.style.opacity = layer.opacity;
+            overlayEl.style.transform = `rotate(${layer.rotate}deg)`;
+            overlayEl.style.zIndex = overlayIndex + 1; // 强制修复层级毒瘤，确保贴图永远在最上层
+        }
+
+        function renderPreviewAndCSS() {
+            let finalCSS = '/* 由尾骨痣の章鱼uwu气泡生成器设计 - 严禁盗用 */\n\n';
+            for (const [selector, state] of Object.entries(states)) {
+                const rgbaBg1 = hexToRgba(state.bgColor, state.bgOpacity);
+                const rgbaBg2 = hexToRgba(state.bgColor2, state.bgOpacity);
+                const bgTex = state.textures[0];
+                let bgRule = `/* 背景颜色 */\n    background-color: ${rgbaBg1} !important;`;
+                
+                if (bgTex.image.trim() !== '' || state.useGradient) {
+                    const imgs = [], sizes = [], pos = [], reps = [];
+                    if (bgTex.image.trim() !== '') {
+                        imgs.push(`url('${bgTex.image.replace(/'/g, "\\'")}')`); sizes.push(`${bgTex.size}%`);
+                        pos.push(`${bgTex.x}% ${bgTex.y}%`); reps.push(bgTex.repeat);
+                    }
+                    if (state.useGradient) {
+                        imgs.push(`linear-gradient(135deg, ${rgbaBg1}, ${rgbaBg2})`); sizes.push('100% 100%');
+                        pos.push('0 0'); reps.push('no-repeat');
+                    }
+                    bgRule += `\n    /* 背景贴图与渐变 */\n    background-image: ${imgs.join(', ')} !important;\n    /* 背景缩放大小 */\n    background-size: ${sizes.join(', ')} !important;\n    /* 背景位置: X轴(调大向右) Y轴(调大向下) */\n    background-position: ${pos.join(', ')} !important;\n    /* 平铺方式 */\n    background-repeat: ${reps.join(', ')} !important;\n    /* 混合模式 */\n    background-blend-mode: ${state.blendMode} !important;`;
+                }
+
+                let radiusRule = `${state.radius}px`;
+                if (selector === '.message-bubble.received') radiusRule = `${state.radius}px ${state.radius}px ${state.radius}px 0`;
+                if (selector === '.message-bubble.sent') radiusRule = `${state.radius}px ${state.radius}px 0 ${state.radius}px`;
+
+                const shadow = state.enableShadow ? `${state.shadowX}px ${state.shadowY}px ${state.shadowBlur}px ${state.shadowColor}` : 'none';
+
+                let cssBlock = `
+    /* --- 基础背景 --- */
+    ${bgRule}
+    
+    /* --- 文字排版 --- */
+    /* 文字颜色 */
+    color: ${state.textColor} !important; 
+    /* 字体大小: 调大数值字体变大 */
+    font-size: ${state.fontSize}rem !important; 
+    /* 字重: 400为正常, 700为加粗, 调大变粗 */
+    font-weight: ${state.weight} !important;
+    /* 字间距: 调大数值字距变宽, 可为负数 */
+    letter-spacing: ${state.spacing}px !important; 
+    /* 行高: 调大数值行距变宽, 默认1.5 */
+    line-height: ${state.lineHeight} !important;
+    /* 文字阴影: X轴偏移(正数向右) Y轴偏移(正数向下) 模糊度 颜色 */
+    text-shadow: 0 0 ${state.textShadow}px ${state.textShadowColor} !important;
+    
+    /* --- 边框与间距 --- */
+    /* 边框: 粗细 样式 颜色 */
+    border: ${state.borderWidth}px solid ${state.borderColor} !important; 
+    /* 圆角: 顺时针分别为 左上 右上 右下 左下 */
+    border-radius: ${radiusRule} !important;
+    /* 内边距: 气泡内部的留白厚度, 调大变宽 */
+    padding: ${state.padding}px !important; 
+    /* 最大宽度: 限制气泡最宽能占屏幕的百分比 */
+    max-width: ${state.maxWidth}% !important; 
+    /* 盒子阴影: X轴偏移(正数向右) Y轴偏移(正数向下) 模糊度 颜色 */
+    box-shadow: ${shadow} !important;
+    
+    /* --- 布局隔离 (勿动) --- */
+    position: relative !important; isolation: isolate !important; overflow: visible !important;
+`;
+                if (state.blur > 0) cssBlock += `    /* 毛玻璃模糊度 */\n    backdrop-filter: blur(${state.blur}px) !important;\n    -webkit-backdrop-filter: blur(${state.blur}px) !important;\n`;
+                finalCSS += `${selector} {\n${cssBlock}}\n`;
+
+                [1, 2].forEach(i => {
+                    const tex = state.textures[i];
+                    if (tex.image.trim() !== '') {
+                        finalCSS += `
+/* --- 贴图层 ${i} --- */
+${selector}::${i===1?'before':'after'} {
+    content: "" !important; position: absolute !important; inset: 0 !important; 
+    /* 允许贴图溢出气泡边界 */
+    margin: -100px !important; padding: 100px !important; 
+    pointer-events: none !important; z-index: ${i+2} !important;
+    background-image: url('${tex.image.replace(/'/g, "\\'")}') !important; 
+    /* 贴图缩放大小 */
+    background-size: ${tex.size}% !important;
+    /* 贴图位置: X轴(调大向右) Y轴(调大向下) */
+    background-position: ${tex.x}% ${tex.y}% !important; 
+    /* 平铺方式 */
+    background-repeat: ${tex.repeat} !important;
+    /* 混合模式与透明度 */
+    mix-blend-mode: ${state.blendMode} !important; opacity: ${tex.opacity} !important; 
+    /* 旋转角度: 正数顺时针, 负数逆时针 */
+    transform: rotate(${tex.rotate}deg) !important;
+}\n`;
+                    }
+                });
+
+                if (selector === '.transfer-card') {
+                    ['preview-transfer-received', 'preview-transfer-sent'].forEach(targetId => {
+                        const el = document.getElementById(targetId);
+                        if (el) {
+                            el.style.cssText = cssBlock.replace(/!important/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+                            applyOverlayPreview(targetId, 2, state.textures[1], state.blendMode);
+                            applyOverlayPreview(targetId, 3, state.textures[2], state.blendMode);
+                        }
+                    });
+                } else {
+                    const targetId = selector.includes('received') ? 'preview-received' : 'preview-sent';
+                    const el = document.getElementById(targetId);
+                    if (el) {
+                        el.style.cssText = cssBlock.replace(/!important/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+                        applyOverlayPreview(targetId, 2, state.textures[1], state.blendMode);
+                        applyOverlayPreview(targetId, 3, state.textures[2], state.blendMode);
+                    }
+                }
+            }
+            els.cssOutput.value = finalCSS;
+        }
+
+        const debouncedRender = debounce(() => { 
+            const oldStatesStr = historyIndex >= 0 ? historyStack[historyIndex] : null;
+            
+            renderPreviewAndCSS(); 
+            
+            if (oldStatesStr) {
+                const oldStates = JSON.parse(oldStatesStr);
+                const stateNames = {
+                    bgColor: '背景色1', bgColor2: '背景色2', useGradient: '启用渐变', bgOpacity: '背景透明度', blur: '毛玻璃模糊度', blendMode: '混合模式',
+                    textColor: '文字颜色', textShadowColor: '文字阴影颜色', textShadow: '文字阴影模糊度', weight: '字重', spacing: '字间距', lineHeight: '行高', fontSize: '字体大小',
+                    borderWidth: '边框厚度', borderColor: '边框颜色', radius: '圆角大小', padding: '内边距', maxWidth: '最大宽度',
+                    enableShadow: '启用盒子阴影', shadowColor: '盒子阴影颜色', shadowBlur: '盒子阴影模糊度', shadowX: '盒子阴影X偏移', shadowY: '盒子阴影Y偏移'
+                };
+                const texNames = ['背景层贴图', '上层覆盖贴图', '最高覆盖贴图'];
+                const texProps = { size: '缩放大小', x: 'X轴位置', y: 'Y轴位置', repeat: '平铺方式', opacity: '透明度', rotate: '旋转角度' };
+                const targetNames = { '.message-bubble.received': '对方气泡', '.message-bubble.sent': '我方气泡', '.transfer-card': '转账卡片' };
+
+                for (const t in states) {
+                    for (const k in states[t]) {
+                        if (k === 'textures') {
+                            states[t].textures.forEach((tex, i) => {
+                                for (const tk in tex) {
+                                    if (tex[tk] !== oldStates[t].textures[i][tk] && tk !== 'image') {
+                                        logAction('精细调整', `[${targetNames[t]}] ${texNames[i]}的"${texProps[tk]}" 从 ${oldStates[t].textures[i][tk]} 修改为 ${tex[tk]}`);
+                                    }
+                                }
+                            });
+                        } else if (states[t][k] !== oldStates[t][k]) {
+                            logAction('精细调整', `[${targetNames[t]}] "${stateNames[k]}" 从 ${oldStates[t][k]} 修改为 ${states[t][k]}`);
+                        }
+                    }
+                }
+            }
+            
+            saveHistory(); 
+        }, 16); // 将延迟从 150ms 降低到 16ms (约等于 60帧/秒)，让滑块极致丝滑
+
+        const handleCSSEdit = debounce(() => {
+            logAction('手动编辑', '用户手动修改了生成的CSS代码');
+        }, 500);
+
+        function resetCurrentState() {
+            if (lockState.global) return;
+            states[els.target.value] = cloneDefaultState();
+            if (els.target.value === '.message-bubble.sent') { states[els.target.value].bgColor = '#1A1C1A'; states[els.target.value].textColor = '#ffffff'; }
+            loadStateToUI(); renderPreviewAndCSS(); saveHistory();
+        }
+
+        function copyStyleToOther() {
+            if (lockState.global) return;
+            const currentTarget = els.target.value;
+            if (currentTarget === '.message-bubble.received') {
+                states['.message-bubble.sent'] = normalizeState(JSON.parse(JSON.stringify(states['.message-bubble.received'])));
+                logAction('复制样式', '将对方气泡样式复制给我方');
+            } else if (currentTarget === '.message-bubble.sent') {
+                states['.message-bubble.received'] = normalizeState(JSON.parse(JSON.stringify(states['.message-bubble.sent'])));
+                logAction('复制样式', '将我方气泡样式复制给对方');
+            } else {
+                alert('转账卡片无法复制给气泡');
+                return;
+            }
+            renderPreviewAndCSS(); 
+            saveHistory();
+            alert('样式已成功复制到另一方！');
+        }
+
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify(states, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'bubble_config.json'; a.click();
+        }
+
+        function importJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    for (const key in states) if (imported[key]) states[key] = normalizeState(imported[key]);
+                    loadStateToUI(); renderPreviewAndCSS(); saveHistory(); alert('导入成功！');
+                } catch (err) { alert('配置文件格式错误！'); }
+            };
+            reader.readAsText(file);
+        }
+
+        els.bgUploads.forEach((uploadEl, index) => {
+            uploadEl.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        const max = 800; 
+                        
+                        if (w > max || h > max) {
+                            if (w > h) { h = Math.round(h * max / w); w = max; }
+                            else { w = Math.round(w * max / h); h = max; }
+                        }
+                        
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        
+                        let compressedBase64;
+                        if (file.type === 'image/png') {
+                            compressedBase64 = canvas.toDataURL('image/png');
+                        } else {
+                            compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                        }
+                        
+                        states[els.target.value].textures[index].image = compressedBase64;
+                        els.bgImages[index].value = '[本地图片已上传]';
+                        updateState();
+                        uploadEl.value = ''; 
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        function updatePresetList() {
+            const list = document.getElementById('custom-preset-list');
+            list.innerHTML = '<option value="">-- 请选择预设 --</option>';
+            const presets = JSON.parse(localStorage.getItem('bubble_presets') || '{}');
+            for (const name in presets) {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                list.appendChild(opt);
+            }
+        }
+
+        function refreshLockUI() {
+            els.btnToggleGlobalLock.textContent = lockState.global ? '全局锁定：开' : '全局锁定';
+            els.btnToggleGlobalLock.classList.toggle('active', lockState.global);
+        }
+
+        function applyPreset(type) {
+            if (lockState.global) return;
+            const target = els.target.value;
+            const state = states[target];
+            
+            if (type === 'minimal') {
+                state.bgColor = '#ffffff'; state.textColor = '#1A1C1A'; state.borderWidth = 1; state.borderColor = '#EAEAEA';
+                state.enableShadow = false; state.radius = 0; state.blur = 0; state.bgOpacity = 1;
+            } else if (type === 'glass') {
+                state.bgColor = '#ffffff'; state.bgOpacity = 0.2; state.blur = 15; state.borderWidth = 1;
+                state.borderColor = '#ffffff'; state.enableShadow = true; state.shadowColor = '#000000'; state.shadowOpacity = 0.1;
+                state.shadowBlur = 20; state.radius = 16;
+            } else if (type === 'magazine') {
+                state.bgColor = '#ffffff'; state.textColor = '#000000'; state.borderWidth = 2; state.borderColor = '#000000';
+                state.enableShadow = true; state.shadowColor = '#000000'; state.shadowOpacity = 1; state.shadowBlur = 0;
+                state.shadowX = 4; state.shadowY = 4; state.radius = 0; state.bgOpacity = 1;
+            } else if (type === 'neumorphism') {
+                state.bgColor = '#E0E5EC'; state.textColor = '#4A5568'; state.borderWidth = 0; state.bgOpacity = 1;
+                state.enableShadow = true; state.shadowColor = '#A3B1C6'; state.shadowOpacity = 0.6; state.shadowBlur = 16;
+                state.shadowX = 8; state.shadowY = 8; state.radius = 20;
+            }
+            
+            logAction('应用官方预设', type);
+            loadStateToUI();
+            renderPreviewAndCSS();
+            saveHistory();
+        }
+
+        function saveCustomPreset() { 
+            const name = document.getElementById('custom-preset-name').value.trim();
+            if (!name) return alert('请输入预设名称');
+            const presets = JSON.parse(localStorage.getItem('bubble_presets') || '{}');
+            presets[name] = states[els.target.value];
+            localStorage.setItem('bubble_presets', JSON.stringify(presets));
+            updatePresetList();
+            logAction('保存自定义预设', name);
+            alert('保存成功！');
+        }
+        
+        function loadCustomPreset() { 
+            const name = document.getElementById('custom-preset-list').value;
+            if (!name) return alert('请选择要加载的预设');
+            const presets = JSON.parse(localStorage.getItem('bubble_presets') || '{}');
+            if (presets[name]) {
+                states[els.target.value] = normalizeState(presets[name]);
+                logAction('加载自定义预设', name);
+                loadStateToUI();
+                renderPreviewAndCSS();
+                saveHistory();
+            }
+        }
+        
+        function deleteCustomPreset() { 
+            const name = document.getElementById('custom-preset-list').value;
+            if (!name) return alert('请选择要删除的预设');
+            const presets = JSON.parse(localStorage.getItem('bubble_presets') || '{}');
+            delete presets[name];
+            localStorage.setItem('bubble_presets', JSON.stringify(presets));
+            updatePresetList();
+            logAction('删除自定义预设', name);
+            alert('删除成功！');
+        }
+
+        function copyCSS() {
+            try {
+                els.cssOutput.select();
+                els.cssOutput.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                alert('CSS 已成功复制到剪贴板！');
+            } catch (err) {
+                alert('复制失败，请手动长按下方文本框进行复制。');
+            }
+        }
+
+        function exportCSSFile() {
+            const blob = new Blob([els.cssOutput.value], { type: 'text/css' });
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = 'bubble_style.css'; 
+            a.click();
+        }
+
+        function showHistory() {
+            document.getElementById('history-log-content').innerText = historyLog.join('\n');
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+
+        function exportHistory() {
+            const blob = new Blob([historyLog.join('\n')], { type: 'text/plain' });
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = '防鉴抄日志.txt'; 
+            a.click();
+        }
+
+        logAction('系统', '工坊初始化完成');
+        updatePresetList();
+        loadStateToUI();
+        refreshLockUI();
+        renderPreviewAndCSS();
+</script>
+</body>
+</html>
