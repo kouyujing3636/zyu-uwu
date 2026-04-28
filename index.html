@@ -87,9 +87,7 @@
 
         .overlay-layer {
             position: absolute;
-            inset: 0;
-            margin: -100px;
-            padding: 100px;
+            inset: -30px;
             display: none;
             pointer-events: none;
             background-repeat: no-repeat;
@@ -367,19 +365,22 @@
             <summary>颜色与背景</summary>
             <div class="details-content">
                 <div class="control-group">
-                    <label>背景色 1</label>
+                    <label>整体透明度 <span class="val-display" id="val-global-opacity">1</span></label>
+                    <input type="range" id="ctrl-global-opacity" min="0" max="1" step="0.05" value="1" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>背景色 1 & 透明度 <span class="val-display" id="val-bg-opacity">1</span></label>
                     <div class="flex-row">
                         <input type="color" id="ctrl-bg-color" onchange="updateState()">
+                        <input type="range" id="ctrl-bg-opacity" min="0" max="1" step="0.05" oninput="updateState()">
                     </div>
                 </div>
                 <div class="control-group">
-                    <label>背景透明度 <span class="val-display" id="val-bg-opacity">1</span></label>
-                    <input type="range" id="ctrl-bg-opacity" min="0" max="1" step="0.05" oninput="updateState()">
-                </div>
-                <div class="control-group">
-                    <label>背景色 2 (开启渐变) <input type="checkbox" id="ctrl-use-gradient" onchange="updateState()"></label>
+                    <label>背景色 2 (开启渐变) & 透明度 <span class="val-display" id="val-bg-opacity2">1</span></label>
                     <div class="flex-row">
+                        <input type="checkbox" id="ctrl-use-gradient" onchange="updateState()">
                         <input type="color" id="ctrl-bg-color2" onchange="updateState()">
+                        <input type="range" id="ctrl-bg-opacity2" min="0" max="1" step="0.05" value="1" oninput="updateState()">
                     </div>
                 </div>
                 <div class="control-group">
@@ -530,12 +531,24 @@
                     <input type="range" id="ctrl-max-width" min="30" max="100" step="1" oninput="updateState()">
                 </div>
                 <div class="control-group">
+                    <label>保留气泡小尾巴 <input type="checkbox" id="ctrl-enable-tail" checked onchange="updateState()"></label>
+                </div>
+                <div class="control-group">
                     <label>圆角大小 <span class="val-display" id="val-radius">15px</span></label>
                     <input type="range" id="ctrl-radius" min="0" max="40" step="1" oninput="updateState()">
                 </div>
                 <div class="control-group">
                     <label>内边距厚度 <span class="val-display" id="val-padding">12px</span></label>
                     <input type="range" id="ctrl-padding" min="0" max="40" step="1" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>边框样式</label>
+                    <select id="ctrl-border-style" class="sub-select" onchange="updateState()">
+                        <option value="solid">实线 (Solid)</option>
+                        <option value="dashed">虚线 (Dashed)</option>
+                        <option value="dotted">点线 (Dotted)</option>
+                        <option value="double">双实线 (Double)</option>
+                    </select>
                 </div>
                 <div class="control-group">
                     <label>边框厚度 & 颜色 <span class="val-display" id="val-border-width">0px</span></label>
@@ -555,8 +568,18 @@
                     <input type="color" id="ctrl-text-color" onchange="updateState()">
                 </div>
                 <div class="control-group">
+                    <label>字体倾斜 (Italic) <input type="checkbox" id="ctrl-font-italic" onchange="updateState()"></label>
+                </div>
+                <div class="control-group">
                     <label>字体大小 <span class="val-display" id="val-font-size">0.9rem</span></label>
                     <input type="range" id="ctrl-font-size" min="0.5" max="1.5" step="0.05" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>文字描边粗细 & 颜色 <span class="val-display" id="val-text-stroke">0px</span></label>
+                    <div class="flex-row">
+                        <input type="color" id="ctrl-text-stroke-color" onchange="updateState()">
+                        <input type="range" id="ctrl-text-stroke" min="0" max="5" step="0.5" oninput="updateState()">
+                    </div>
                 </div>
                 <div class="control-group">
                     <label>文字阴影模糊度 <span class="val-display" id="val-text-shadow">0px</span></label>
@@ -581,18 +604,24 @@
                     <label>启用盒子阴影 <input type="checkbox" id="ctrl-enable-shadow" onchange="updateState()"></label>
                 </div>
                 <div class="control-group">
-                    <label>盒子阴影颜色</label>
-                    <input type="color" id="ctrl-shadow-color" onchange="updateState()">
+                    <label>盒子阴影颜色 & 透明度 <span class="val-display" id="val-shadow-opacity">0.1</span></label>
+                    <div class="flex-row">
+                        <input type="color" id="ctrl-shadow-color" onchange="updateState()">
+                        <input type="range" id="ctrl-shadow-opacity" min="0" max="1" step="0.05" oninput="updateState()">
+                    </div>
                 </div>
                 <div class="control-group">
-                    <label>盒子阴影模糊度 <span class="val-display" id="val-shadow-blur">0px</span></label>
-                    <input type="range" id="ctrl-shadow-blur" min="0" max="30" step="1" oninput="updateState()">
+                    <label>盒子阴影模糊度 & 扩展大小 <span class="val-display" id="val-shadow-blur-spread">0px, 0px</span></label>
+                    <div class="flex-row">
+                        <input type="range" id="ctrl-shadow-blur" min="0" max="50" step="1" oninput="updateState()">
+                        <input type="range" id="ctrl-shadow-spread" min="-20" max="30" step="1" oninput="updateState()">
+                    </div>
                 </div>
                 <div class="control-group">
                     <label>盒子阴影 X/Y 偏移 <span class="val-display" id="val-shadow-xy">0px, 4px</span></label>
                     <div class="flex-row">
-                        <input type="range" id="ctrl-shadow-x" min="-20" max="20" step="1" oninput="updateState()">
-                        <input type="range" id="ctrl-shadow-y" min="-20" max="20" step="1" oninput="updateState()">
+                        <input type="range" id="ctrl-shadow-x" min="-30" max="30" step="1" oninput="updateState()">
+                        <input type="range" id="ctrl-shadow-y" min="-30" max="30" step="1" oninput="updateState()">
                     </div>
                 </div>
             </div>
@@ -651,11 +680,13 @@
 
         function cloneDefaultState() {
             return {
-                bgColor: '#ffffff', bgColor2: '#f0f0f0', useGradient: false, bgOpacity: 1, blur: 0, blendMode: 'normal',
+                globalOpacity: 1,
+                bgColor: '#ffffff', bgColor2: '#f0f0f0', useGradient: false, bgOpacity: 1, bgOpacity2: 1, blur: 0, blendMode: 'normal',
                 textures: createDefaultTextures(),
                 textColor: '#333333', textShadowColor: '#000000', textShadow: 0, weight: 400, spacing: 0, lineHeight: 1.5, fontSize: 0.9,
-                borderWidth: 0, borderColor: '#000000', radius: 15, padding: 12, maxWidth: 85,
-                enableShadow: true, shadowBlur: 0, shadowX: 0, shadowY: 4, shadowColor: '#000000', shadowOpacity: 0.1
+                fontItalic: false, textStrokeColor: '#000000', textStroke: 0,
+                borderWidth: 0, borderColor: '#000000', borderStyle: 'solid', radius: 15, padding: 12, maxWidth: 85, enableTail: true,
+                enableShadow: true, shadowBlur: 0, shadowX: 0, shadowY: 4, shadowColor: '#000000', shadowOpacity: 0.1, shadowSpread: 0
             };
         }
 
@@ -673,7 +704,7 @@
         let states = {
             '.message-bubble.received': normalizeState({ bgColor: '#ffffff', textColor: '#333333' }),
             '.message-bubble.sent': normalizeState({ bgColor: '#1A1C1A', textColor: '#ffffff' }),
-            '.transfer-card': normalizeState({ bgColor: '#ffffff', radius: 12, padding: 15, maxWidth: 100 })
+            '.transfer-card': normalizeState({ bgColor: '#ffffff', radius: 12, padding: 15, maxWidth: 100, enableTail: false })
         };
 
         let historyStack = [];
@@ -706,8 +737,9 @@
 
         const els = {
             target: document.getElementById('target-selector'),
+            globalOpacity: document.getElementById('ctrl-global-opacity'),
             bgColor: document.getElementById('ctrl-bg-color'), bgColor2: document.getElementById('ctrl-bg-color2'),
-            useGradient: document.getElementById('ctrl-use-gradient'), bgOpacity: document.getElementById('ctrl-bg-opacity'),
+            useGradient: document.getElementById('ctrl-use-gradient'), bgOpacity: document.getElementById('ctrl-bg-opacity'), bgOpacity2: document.getElementById('ctrl-bg-opacity2'),
             blur: document.getElementById('ctrl-blur'), blendMode: document.getElementById('ctrl-blend-mode'),
             bgImages: [document.getElementById('ctrl-bg-image-1'), document.getElementById('ctrl-bg-image-2'), document.getElementById('ctrl-bg-image-3')],
             bgUploads: [document.getElementById('ctrl-bg-upload-1'), document.getElementById('ctrl-bg-upload-2'), document.getElementById('ctrl-bg-upload-3')],
@@ -720,13 +752,14 @@
             textColor: document.getElementById('ctrl-text-color'), textShadowColor: document.getElementById('ctrl-text-shadow-color'),
             textShadow: document.getElementById('ctrl-text-shadow'), weight: document.getElementById('ctrl-weight'),
             spacing: document.getElementById('ctrl-spacing'), lineHeight: document.getElementById('ctrl-line-height'),
-            fontSize: document.getElementById('ctrl-font-size'), borderWidth: document.getElementById('ctrl-border-width'),
-            borderColor: document.getElementById('ctrl-border-color'), radius: document.getElementById('ctrl-radius'),
-            padding: document.getElementById('ctrl-padding'), maxWidth: document.getElementById('ctrl-max-width'),
+            fontSize: document.getElementById('ctrl-font-size'), fontItalic: document.getElementById('ctrl-font-italic'),
+            textStrokeColor: document.getElementById('ctrl-text-stroke-color'), textStroke: document.getElementById('ctrl-text-stroke'),
+            borderWidth: document.getElementById('ctrl-border-width'), borderColor: document.getElementById('ctrl-border-color'), borderStyle: document.getElementById('ctrl-border-style'),
+            radius: document.getElementById('ctrl-radius'), padding: document.getElementById('ctrl-padding'), maxWidth: document.getElementById('ctrl-max-width'), enableTail: document.getElementById('ctrl-enable-tail'),
             enableShadow: document.getElementById('ctrl-enable-shadow'), shadowColor: document.getElementById('ctrl-shadow-color'),
             shadowBlur: document.getElementById('ctrl-shadow-blur'), shadowX: document.getElementById('ctrl-shadow-x'),
-            shadowY: document.getElementById('ctrl-shadow-y'), cssOutput: document.getElementById('css-output'),
-            btnToggleGlobalLock: document.getElementById('btn-toggle-global-lock')
+            shadowY: document.getElementById('ctrl-shadow-y'), shadowOpacity: document.getElementById('ctrl-shadow-opacity'), shadowSpread: document.getElementById('ctrl-shadow-spread'),
+            cssOutput: document.getElementById('css-output'), btnToggleGlobalLock: document.getElementById('btn-toggle-global-lock')
         };
 
         function debounce(func, wait) {
@@ -742,32 +775,44 @@
 
         function loadStateToUI() {
             const state = states[els.target.value];
+            if(els.globalOpacity) els.globalOpacity.value = state.globalOpacity !== undefined ? state.globalOpacity : 1;
             els.bgColor.value = state.bgColor; els.bgColor2.value = state.bgColor2;
-            els.useGradient.checked = state.useGradient; els.bgOpacity.value = state.bgOpacity;
+            els.useGradient.checked = state.useGradient; els.bgOpacity.value = state.bgOpacity; 
+            if(els.bgOpacity2) els.bgOpacity2.value = state.bgOpacity2 !== undefined ? state.bgOpacity2 : 1;
             els.blur.value = state.blur; els.blendMode.value = state.blendMode;
 
             state.textures.forEach((layer, index) => {
                 els.bgImages[index].value = layer.image; els.bgSizes[index].value = layer.size;
                 els.bgXs[index].value = layer.x; els.bgYs[index].value = layer.y; els.bgRepeats[index].value = layer.repeat;
                 if (index > 0) { els.bgOpacities[index].value = layer.opacity; els.bgRotates[index].value = layer.rotate; }
-                if (els.bgUploads[index]) els.bgUploads[index].value = ''; // 修复切换目标后无法重复上传的毒瘤
+                if (els.bgUploads[index]) els.bgUploads[index].value = ''; 
             });
 
             els.textColor.value = state.textColor; els.textShadowColor.value = state.textShadowColor;
             els.textShadow.value = state.textShadow; els.weight.value = state.weight; els.spacing.value = state.spacing;
-            els.lineHeight.value = state.lineHeight; els.fontSize.value = state.fontSize; els.borderWidth.value = state.borderWidth;
-            els.borderColor.value = state.borderColor; els.radius.value = state.radius; els.padding.value = state.padding;
-            els.maxWidth.value = state.maxWidth; els.enableShadow.checked = state.enableShadow;
-            els.shadowColor.value = state.shadowColor; els.shadowBlur.value = state.shadowBlur;
-            els.shadowX.value = state.shadowX; els.shadowY.value = state.shadowY;
+            els.lineHeight.value = state.lineHeight; els.fontSize.value = state.fontSize; 
+            if(els.fontItalic) els.fontItalic.checked = state.fontItalic;
+            if(els.textStrokeColor) els.textStrokeColor.value = state.textStrokeColor;
+            if(els.textStroke) els.textStroke.value = state.textStroke;
+            els.borderWidth.value = state.borderWidth; els.borderColor.value = state.borderColor; 
+            if(els.borderStyle) els.borderStyle.value = state.borderStyle;
+            els.radius.value = state.radius; els.padding.value = state.padding; els.maxWidth.value = state.maxWidth; 
+            if(els.enableTail) els.enableTail.checked = state.enableTail;
+            els.enableShadow.checked = state.enableShadow; els.shadowColor.value = state.shadowColor; 
+            els.shadowBlur.value = state.shadowBlur; els.shadowX.value = state.shadowX; els.shadowY.value = state.shadowY;
+            if(els.shadowOpacity) els.shadowOpacity.value = state.shadowOpacity !== undefined ? state.shadowOpacity : 0.1;
+            if(els.shadowSpread) els.shadowSpread.value = state.shadowSpread !== undefined ? state.shadowSpread : 0;
 
             updateValueDisplays(state);
         }
 
         function updateValueDisplays(state) {
+            if(document.getElementById('val-global-opacity')) document.getElementById('val-global-opacity').innerText = state.globalOpacity !== undefined ? state.globalOpacity : 1;
             document.getElementById('val-bg-opacity').innerText = state.bgOpacity;
+            if(document.getElementById('val-bg-opacity2')) document.getElementById('val-bg-opacity2').innerText = state.bgOpacity2 !== undefined ? state.bgOpacity2 : 1;
             document.getElementById('val-blur').innerText = state.blur + 'px';
             document.getElementById('val-text-shadow').innerText = state.textShadow + 'px';
+            if(document.getElementById('val-text-stroke')) document.getElementById('val-text-stroke').innerText = state.textStroke + 'px';
             document.getElementById('val-weight').innerText = state.weight;
             document.getElementById('val-spacing').innerText = state.spacing + 'px';
             document.getElementById('val-line-height').innerText = state.lineHeight;
@@ -776,7 +821,9 @@
             document.getElementById('val-radius').innerText = state.radius + 'px';
             document.getElementById('val-padding').innerText = state.padding + 'px';
             document.getElementById('val-max-width').innerText = state.maxWidth + '%';
-            document.getElementById('val-shadow-blur').innerText = state.shadowBlur + 'px';
+            
+            if(document.getElementById('val-shadow-opacity')) document.getElementById('val-shadow-opacity').innerText = state.shadowOpacity !== undefined ? state.shadowOpacity : 0.1;
+            if(document.getElementById('val-shadow-blur-spread')) document.getElementById('val-shadow-blur-spread').innerText = `${state.shadowBlur}px, ${state.shadowSpread || 0}px`;
             document.getElementById('val-shadow-xy').innerText = `${state.shadowX}px, ${state.shadowY}px`;
 
             state.textures.forEach((layer, index) => {
@@ -794,15 +841,15 @@
             if (lockState.global) return loadStateToUI();
             const target = els.target.value; const state = states[target];
 
+            if(els.globalOpacity) state.globalOpacity = Number(els.globalOpacity.value);
             state.bgColor = els.bgColor.value; state.bgColor2 = els.bgColor2.value;
             state.useGradient = els.useGradient.checked; state.bgOpacity = Number(els.bgOpacity.value);
+            if(els.bgOpacity2) state.bgOpacity2 = Number(els.bgOpacity2.value);
             state.blur = Number(els.blur.value); state.blendMode = els.blendMode.value;
 
             state.textures = state.textures.map((layer, index) => {
-                // 毒瘤修复：如果输入框显示的是本地图片提示，则保留原有的图片数据，否则使用输入框的新URL
                 const currentInputValue = els.bgImages[index].value;
                 const finalImage = currentInputValue === '[本地图片已上传]' ? layer.image : currentInputValue;
-                
                 return {
                     ...layer, image: finalImage, size: Number(els.bgSizes[index].value),
                     x: Number(els.bgXs[index].value), y: Number(els.bgYs[index].value), repeat: els.bgRepeats[index].value,
@@ -813,12 +860,19 @@
             state.textColor = els.textColor.value; state.textShadowColor = els.textShadowColor.value;
             state.textShadow = Number(els.textShadow.value); state.weight = Number(els.weight.value);
             state.spacing = Number(els.spacing.value); state.lineHeight = Number(els.lineHeight.value);
-            state.fontSize = Number(els.fontSize.value); state.borderWidth = Number(els.borderWidth.value);
-            state.borderColor = els.borderColor.value; state.radius = Number(els.radius.value);
-            state.padding = Number(els.padding.value); state.maxWidth = Number(els.maxWidth.value);
+            state.fontSize = Number(els.fontSize.value); 
+            if(els.fontItalic) state.fontItalic = els.fontItalic.checked;
+            if(els.textStrokeColor) state.textStrokeColor = els.textStrokeColor.value;
+            if(els.textStroke) state.textStroke = Number(els.textStroke.value);
+            state.borderWidth = Number(els.borderWidth.value); state.borderColor = els.borderColor.value; 
+            if(els.borderStyle) state.borderStyle = els.borderStyle.value;
+            state.radius = Number(els.radius.value); state.padding = Number(els.padding.value); state.maxWidth = Number(els.maxWidth.value);
+            if(els.enableTail) state.enableTail = els.enableTail.checked;
             state.enableShadow = els.enableShadow.checked; state.shadowColor = els.shadowColor.value;
             state.shadowBlur = Number(els.shadowBlur.value); state.shadowX = Number(els.shadowX.value);
             state.shadowY = Number(els.shadowY.value);
+            if(els.shadowOpacity) state.shadowOpacity = Number(els.shadowOpacity.value);
+            if(els.shadowSpread) state.shadowSpread = Number(els.shadowSpread.value);
 
             updateValueDisplays(state); debouncedRender();
         }
@@ -864,11 +918,22 @@
                     bgRule += `\n    /* 背景贴图与渐变 */\n    background-image: ${imgs.join(', ')} !important;\n    /* 背景缩放大小 */\n    background-size: ${sizes.join(', ')} !important;\n    /* 背景位置: X轴(调大向右) Y轴(调大向下) */\n    background-position: ${pos.join(', ')} !important;\n    /* 平铺方式 */\n    background-repeat: ${reps.join(', ')} !important;\n    /* 混合模式 */\n    background-blend-mode: ${state.blendMode} !important;`;
                 }
 
+                const bgOpacity2 = state.bgOpacity2 !== undefined ? state.bgOpacity2 : state.bgOpacity;
+                const rgbaBg2 = hexToRgba(state.bgColor2, bgOpacity2);
+                
                 let radiusRule = `${state.radius}px`;
-                if (selector === '.message-bubble.received') radiusRule = `${state.radius}px ${state.radius}px ${state.radius}px 0`;
-                if (selector === '.message-bubble.sent') radiusRule = `${state.radius}px ${state.radius}px 0 ${state.radius}px`;
+                if (state.enableTail !== false) {
+                    if (selector === '.message-bubble.received') radiusRule = `${state.radius}px ${state.radius}px ${state.radius}px 0`;
+                    if (selector === '.message-bubble.sent') radiusRule = `${state.radius}px ${state.radius}px 0 ${state.radius}px`;
+                }
 
-                const shadow = state.enableShadow ? `${state.shadowX}px ${state.shadowY}px ${state.shadowBlur}px ${state.shadowColor}` : 'none';
+                const shadowSpread = state.shadowSpread || 0;
+                const shadowOpacity = state.shadowOpacity !== undefined ? state.shadowOpacity : 0.1;
+                const shadow = state.enableShadow ? `${state.shadowX}px ${state.shadowY}px ${state.shadowBlur}px ${shadowSpread}px ${hexToRgba(state.shadowColor, shadowOpacity)}` : 'none';
+                
+                const fontStyle = state.fontItalic ? 'italic' : 'normal';
+                const textStroke = state.textStroke > 0 ? `-webkit-text-stroke: ${state.textStroke}px ${state.textStrokeColor} !important;` : '';
+                const globalOpacity = state.globalOpacity !== undefined ? `opacity: ${state.globalOpacity} !important;` : '';
 
                 let cssBlock = `
     /* --- 基础背景 --- */
@@ -879,6 +944,8 @@
     color: ${state.textColor} !important; 
     /* 字体大小: 调大数值字体变大 */
     font-size: ${state.fontSize}rem !important; 
+    /* 字体样式: 正常或斜体 */
+    font-style: ${fontStyle} !important;
     /* 字重: 400为正常, 700为加粗, 调大变粗 */
     font-weight: ${state.weight} !important;
     /* 字间距: 调大数值字距变宽, 可为负数 */
@@ -887,21 +954,24 @@
     line-height: ${state.lineHeight} !important;
     /* 文字阴影: X轴偏移(正数向右) Y轴偏移(正数向下) 模糊度 颜色 */
     text-shadow: 0 0 ${state.textShadow}px ${state.textShadowColor} !important;
+    /* 文字描边 */
+    ${textStroke}
     
     /* --- 边框与间距 --- */
     /* 边框: 粗细 样式 颜色 */
-    border: ${state.borderWidth}px solid ${state.borderColor} !important; 
+    border: ${state.borderWidth}px ${state.borderStyle || 'solid'} ${state.borderColor} !important; 
     /* 圆角: 顺时针分别为 左上 右上 右下 左下 */
     border-radius: ${radiusRule} !important;
     /* 内边距: 气泡内部的留白厚度, 调大变宽 */
     padding: ${state.padding}px !important; 
     /* 最大宽度: 限制气泡最宽能占屏幕的百分比 */
     max-width: ${state.maxWidth}% !important; 
-    /* 盒子阴影: X轴偏移(正数向右) Y轴偏移(正数向下) 模糊度 颜色 */
+    /* 盒子阴影: X轴偏移(正数向右) Y轴偏移(正数向下) 模糊度 扩展大小 颜色 */
     box-shadow: ${shadow} !important;
     
     /* --- 布局隔离 (勿动) --- */
     position: relative !important; isolation: isolate !important; overflow: visible !important;
+    ${globalOpacity}
 `;
                 if (state.blur > 0) cssBlock += `    /* 毛玻璃模糊度 */\n    backdrop-filter: blur(${state.blur}px) !important;\n    -webkit-backdrop-filter: blur(${state.blur}px) !important;\n`;
                 finalCSS += `${selector} {\n${cssBlock}}\n`;
@@ -910,23 +980,11 @@
                     const tex = state.textures[i];
                     if (tex.image.trim() !== '') {
                         finalCSS += `
-/* --- 贴图层 ${i} --- */
+/* 贴图层 ${i} */
 ${selector}::${i===1?'before':'after'} {
-    content: "" !important; position: absolute !important; inset: 0 !important; 
-    /* 允许贴图溢出气泡边界 */
-    margin: -100px !important; padding: 100px !important; 
-    pointer-events: none !important; z-index: ${i+2} !important;
-    background-image: url('${tex.image.replace(/'/g, "\\'")}') !important; 
-    /* 贴图缩放大小 */
-    background-size: ${tex.size}% !important;
-    /* 贴图位置: X轴(调大向右) Y轴(调大向下) */
-    background-position: ${tex.x}% ${tex.y}% !important; 
-    /* 平铺方式 */
-    background-repeat: ${tex.repeat} !important;
-    /* 混合模式与透明度 */
-    mix-blend-mode: ${state.blendMode} !important; opacity: ${tex.opacity} !important; 
-    /* 旋转角度: 正数顺时针, 负数逆时针 */
-    transform: rotate(${tex.rotate}deg) !important;
+    content: "" !important; position: absolute !important; inset: -30px !important; pointer-events: none !important; z-index: ${i+2} !important;
+    background: url('${tex.image.replace(/'/g, "\\'")}') ${tex.x}% ${tex.y}% / ${tex.size}% ${tex.repeat} !important;
+    mix-blend-mode: ${state.blendMode} !important; opacity: ${tex.opacity} !important; transform: rotate(${tex.rotate}deg) !important;
 }\n`;
                     }
                 });
