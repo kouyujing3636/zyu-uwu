@@ -735,31 +735,34 @@
 
         let lockState = { global: false };
 
+        // 防弹级元素获取函数：找不到元素也不会报错卡死
+        const getEl = (id) => document.getElementById(id);
+        
         const els = {
-            target: document.getElementById('target-selector'),
-            globalOpacity: document.getElementById('ctrl-global-opacity'),
-            bgColor: document.getElementById('ctrl-bg-color'), bgColor2: document.getElementById('ctrl-bg-color2'),
-            useGradient: document.getElementById('ctrl-use-gradient'), bgOpacity: document.getElementById('ctrl-bg-opacity'), bgOpacity2: document.getElementById('ctrl-bg-opacity2'),
-            blur: document.getElementById('ctrl-blur'), blendMode: document.getElementById('ctrl-blend-mode'),
-            bgImages: [document.getElementById('ctrl-bg-image-1'), document.getElementById('ctrl-bg-image-2'), document.getElementById('ctrl-bg-image-3')],
-            bgUploads: [document.getElementById('ctrl-bg-upload-1'), document.getElementById('ctrl-bg-upload-2'), document.getElementById('ctrl-bg-upload-3')],
-            bgSizes: [document.getElementById('ctrl-bg-size-1'), document.getElementById('ctrl-bg-size-2'), document.getElementById('ctrl-bg-size-3')],
-            bgXs: [document.getElementById('ctrl-bg-x-1'), document.getElementById('ctrl-bg-x-2'), document.getElementById('ctrl-bg-x-3')],
-            bgYs: [document.getElementById('ctrl-bg-y-1'), document.getElementById('ctrl-bg-y-2'), document.getElementById('ctrl-bg-y-3')],
-            bgRepeats: [document.getElementById('ctrl-bg-repeat-1'), document.getElementById('ctrl-bg-repeat-2'), document.getElementById('ctrl-bg-repeat-3')],
-            bgOpacities: [null, document.getElementById('ctrl-bg-opacity-2'), document.getElementById('ctrl-bg-opacity-3')],
-            bgRotates: [null, document.getElementById('ctrl-bg-rotate-2'), document.getElementById('ctrl-bg-rotate-3')],
-            textColor: document.getElementById('ctrl-text-color'), textShadowColor: document.getElementById('ctrl-text-shadow-color'),
-            textShadow: document.getElementById('ctrl-text-shadow'), weight: document.getElementById('ctrl-weight'),
-            spacing: document.getElementById('ctrl-spacing'), lineHeight: document.getElementById('ctrl-line-height'),
-            fontSize: document.getElementById('ctrl-font-size'), fontItalic: document.getElementById('ctrl-font-italic'),
-            textStrokeColor: document.getElementById('ctrl-text-stroke-color'), textStroke: document.getElementById('ctrl-text-stroke'),
-            borderWidth: document.getElementById('ctrl-border-width'), borderColor: document.getElementById('ctrl-border-color'), borderStyle: document.getElementById('ctrl-border-style'),
-            radius: document.getElementById('ctrl-radius'), padding: document.getElementById('ctrl-padding'), maxWidth: document.getElementById('ctrl-max-width'), enableTail: document.getElementById('ctrl-enable-tail'),
-            enableShadow: document.getElementById('ctrl-enable-shadow'), shadowColor: document.getElementById('ctrl-shadow-color'),
-            shadowBlur: document.getElementById('ctrl-shadow-blur'), shadowX: document.getElementById('ctrl-shadow-x'),
-            shadowY: document.getElementById('ctrl-shadow-y'), shadowOpacity: document.getElementById('ctrl-shadow-opacity'), shadowSpread: document.getElementById('ctrl-shadow-spread'),
-            cssOutput: document.getElementById('css-output'), btnToggleGlobalLock: document.getElementById('btn-toggle-global-lock')
+            target: getEl('target-selector'),
+            globalOpacity: getEl('ctrl-global-opacity'),
+            bgColor: getEl('ctrl-bg-color'), bgColor2: getEl('ctrl-bg-color2'),
+            useGradient: getEl('ctrl-use-gradient'), bgOpacity: getEl('ctrl-bg-opacity'), bgOpacity2: getEl('ctrl-bg-opacity2'),
+            blur: getEl('ctrl-blur'), blendMode: getEl('ctrl-blend-mode'),
+            bgImages: [getEl('ctrl-bg-image-1'), getEl('ctrl-bg-image-2'), getEl('ctrl-bg-image-3')],
+            bgUploads: [getEl('ctrl-bg-upload-1'), getEl('ctrl-bg-upload-2'), getEl('ctrl-bg-upload-3')],
+            bgSizes: [getEl('ctrl-bg-size-1'), getEl('ctrl-bg-size-2'), getEl('ctrl-bg-size-3')],
+            bgXs: [getEl('ctrl-bg-x-1'), getEl('ctrl-bg-x-2'), getEl('ctrl-bg-x-3')],
+            bgYs: [getEl('ctrl-bg-y-1'), getEl('ctrl-bg-y-2'), getEl('ctrl-bg-y-3')],
+            bgRepeats: [getEl('ctrl-bg-repeat-1'), getEl('ctrl-bg-repeat-2'), getEl('ctrl-bg-repeat-3')],
+            bgOpacities: [null, getEl('ctrl-bg-opacity-2'), getEl('ctrl-bg-opacity-3')],
+            bgRotates: [null, getEl('ctrl-bg-rotate-2'), getEl('ctrl-bg-rotate-3')],
+            textColor: getEl('ctrl-text-color'), textShadowColor: getEl('ctrl-text-shadow-color'),
+            textShadow: getEl('ctrl-text-shadow'), weight: getEl('ctrl-weight'),
+            spacing: getEl('ctrl-spacing'), lineHeight: getEl('ctrl-line-height'),
+            fontSize: getEl('ctrl-font-size'), fontItalic: getEl('ctrl-font-italic'),
+            textStrokeColor: getEl('ctrl-text-stroke-color'), textStroke: getEl('ctrl-text-stroke'),
+            borderWidth: getEl('ctrl-border-width'), borderColor: getEl('ctrl-border-color'), borderStyle: getEl('ctrl-border-style'),
+            radius: getEl('ctrl-radius'), padding: getEl('ctrl-padding'), maxWidth: getEl('ctrl-max-width'), enableTail: getEl('ctrl-enable-tail'),
+            enableShadow: getEl('ctrl-enable-shadow'), shadowColor: getEl('ctrl-shadow-color'),
+            shadowBlur: getEl('ctrl-shadow-blur'), shadowX: getEl('ctrl-shadow-x'),
+            shadowY: getEl('ctrl-shadow-y'), shadowOpacity: getEl('ctrl-shadow-opacity'), shadowSpread: getEl('ctrl-shadow-spread'),
+            cssOutput: getEl('css-output'), btnToggleGlobalLock: getEl('btn-toggle-global-lock')
         };
 
         function debounce(func, wait) {
@@ -848,12 +851,18 @@
             state.blur = Number(els.blur.value); state.blendMode = els.blendMode.value;
 
             state.textures = state.textures.map((layer, index) => {
+                if (!els.bgImages[index]) return layer; // 防崩溃保护
                 const currentInputValue = els.bgImages[index].value;
                 const finalImage = currentInputValue === '[本地图片已上传]' ? layer.image : currentInputValue;
                 return {
-                    ...layer, image: finalImage, size: Number(els.bgSizes[index].value),
-                    x: Number(els.bgXs[index].value), y: Number(els.bgYs[index].value), repeat: els.bgRepeats[index].value,
-                    opacity: index > 0 ? Number(els.bgOpacities[index].value) : 1, rotate: index > 0 ? Number(els.bgRotates[index].value) : 0
+                    ...layer, 
+                    image: finalImage, 
+                    size: els.bgSizes[index] ? Number(els.bgSizes[index].value) : layer.size,
+                    x: els.bgXs[index] ? Number(els.bgXs[index].value) : layer.x, 
+                    y: els.bgYs[index] ? Number(els.bgYs[index].value) : layer.y, 
+                    repeat: els.bgRepeats[index] ? els.bgRepeats[index].value : layer.repeat,
+                    opacity: (index > 0 && els.bgOpacities[index]) ? Number(els.bgOpacities[index].value) : layer.opacity, 
+                    rotate: (index > 0 && els.bgRotates[index]) ? Number(els.bgRotates[index].value) : layer.rotate
                 };
             });
 
