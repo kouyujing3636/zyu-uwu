@@ -344,7 +344,12 @@
             <summary>我的自定义预设</summary>
             <div class="details-content">
                 <div class="control-group">
-                    <label>保存当前所有设置为新预设</label>
+                    <label>保存自定义预设</label>
+                    <select id="custom-preset-scope" class="sub-select" style="margin-bottom: 8px;">
+                        <option value="all">保存全部数据 (双向气泡 + 转账卡片)</option>
+                        <option value="bubbles">仅保存双向气泡</option>
+                        <option value="current">仅保存当前选中的目标</option>
+                    </select>
                     <div class="flex-row">
                         <input type="text" id="custom-preset-name" placeholder="输入预设名称">
                         <button class="btn btn-primary" onclick="saveCustomPreset()" style="width: 80px;">保存</button>
@@ -1194,11 +1199,32 @@ ${selector}::${i===1?'before':'after'} {
         function saveCustomPreset() { 
             const name = document.getElementById('custom-preset-name').value.trim();
             if (!name) return alert('请输入预设名称');
+            
+            const scope = document.getElementById('custom-preset-scope').value;
             const presets = JSON.parse(localStorage.getItem('bubble_presets') || '{}');
-            presets[name] = states[els.target.value];
+            
+            let presetData = {};
+            if (scope === 'all') {
+                presetData = {
+                    _isMulti: true,
+                    received: states['.message-bubble.received'],
+                    sent: states['.message-bubble.sent'],
+                    transfer: states['.transfer-card']
+                };
+            } else if (scope === 'bubbles') {
+                presetData = {
+                    _isMulti: true,
+                    received: states['.message-bubble.received'],
+                    sent: states['.message-bubble.sent']
+                };
+            } else {
+                presetData = states[els.target.value];
+            }
+            
+            presets[name] = presetData;
             localStorage.setItem('bubble_presets', JSON.stringify(presets));
             updatePresetList();
-            logAction('保存自定义预设', name);
+            logAction('保存自定义预设', `${name} (${scope})`);
             alert('保存成功！');
         }
         
@@ -1206,12 +1232,22 @@ ${selector}::${i===1?'before':'after'} {
             const name = document.getElementById('custom-preset-list').value;
             if (!name) return alert('请选择要加载的预设');
             const presets = JSON.parse(localStorage.getItem('bubble_presets') || '{}');
-            if (presets[name]) {
-                states[els.target.value] = normalizeState(presets[name]);
+            const presetData = presets[name];
+            
+            if (presetData) {
+                if (presetData._isMulti) {
+                    if (presetData.received) states['.message-bubble.received'] = normalizeState(presetData.received);
+                    if (presetData.sent) states['.message-bubble.sent'] = normalizeState(presetData.sent);
+                    if (presetData.transfer) states['.transfer-card'] = normalizeState(presetData.transfer);
+                } else {
+                    states[els.target.value] = normalizeState(presetData);
+                }
+                
                 logAction('加载自定义预设', name);
                 loadStateToUI();
                 renderPreviewAndCSS();
                 saveHistory();
+                alert('加载成功！');
             }
         }
         
