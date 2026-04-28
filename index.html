@@ -109,6 +109,8 @@
             flex: 1; min-height: 0; background: var(--panel-bg); overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 0 20px calc(28px + env(safe-area-inset-bottom));
+            position: relative;
+            z-index: 30;
         }
 
         @media (max-width: 640px) {
@@ -640,7 +642,7 @@
         </details>
 
         <div class="footer">
-            尾骨痣 の章鱼uwu气泡生成器出品<br>联系方式: 171519582
+            尾骨痣 の章鱼uwu气泡生成器出品<br>联系方式:QQ 171519582
         </div>
 
     </div>
@@ -903,14 +905,15 @@
             overlayEl.style.mixBlendMode = blendMode;
             overlayEl.style.opacity = layer.opacity;
             overlayEl.style.transform = `rotate(${layer.rotate}deg)`;
-            overlayEl.style.zIndex = overlayIndex + 1; // 强制修复层级毒瘤，确保贴图永远在最上层
+            overlayEl.style.zIndex = overlayIndex + 1; 
+            overlayEl.style.pointerEvents = 'none';
         }
 
         function renderPreviewAndCSS() {
-            let finalCSS = '/* 由尾骨痣の章鱼uwu气泡生成器设计 - 严禁盗用 */\n\n';
+            let finalCSS = '/* 由尾骨痣の章鱼uwu气泡生成器设计 - 请保留此字符，勿删除，使用生成器请注明尾骨痣 */\n\n';
             for (const [selector, state] of Object.entries(states)) {
                 const rgbaBg1 = hexToRgba(state.bgColor, state.bgOpacity);
-                const rgbaBg2 = hexToRgba(state.bgColor2, state.bgOpacity);
+                let rgbaBg2 = hexToRgba(state.bgColor2, state.bgOpacity);
                 const bgTex = state.textures[0];
                 let bgRule = `/* 背景颜色 */\n    background-color: ${rgbaBg1} !important;`;
                 
@@ -928,7 +931,7 @@
                 }
 
                 const bgOpacity2 = state.bgOpacity2 !== undefined ? state.bgOpacity2 : state.bgOpacity;
-                const rgbaBg2 = hexToRgba(state.bgColor2, bgOpacity2);
+                rgbaBg2 = hexToRgba(state.bgColor2, bgOpacity2);
                 
                 let radiusRule = `${state.radius}px`;
                 if (state.enableTail !== false) {
@@ -1019,7 +1022,6 @@ ${selector}::${i===1?'before':'after'} {
             }
             els.cssOutput.value = finalCSS;
         }
-
         const debouncedRender = debounce(() => { 
             const oldStatesStr = historyIndex >= 0 ? historyStack[historyIndex] : null;
             
@@ -1055,7 +1057,7 @@ ${selector}::${i===1?'before':'after'} {
             }
             
             saveHistory(); 
-        }, 16); // 将延迟从 150ms 降低到 16ms (约等于 60帧/秒)，让滑块极致丝滑
+        }, 80); 
 
         const handleCSSEdit = debounce(() => {
             logAction('手动编辑', '用户手动修改了生成的CSS代码');
