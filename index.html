@@ -327,10 +327,8 @@
         <div class="target-selector-wrap">
             <div class="target-top-row">
                 <select id="target-selector" class="main-select" onchange="loadStateToUI()">
-                    <option value=".message-bubble.received">编辑：对方气泡 (长)</option>
-                    <option value=".message-bubble.received.short">编辑：对方气泡 (短)</option>
-                    <option value=".message-bubble.sent">编辑：我方气泡 (长)</option>
-                    <option value=".message-bubble.sent.short">编辑：我方气泡 (短)</option>
+                    <option value=".message-bubble.received">编辑：对方气泡</option>
+                    <option value=".message-bubble.sent">编辑：我方气泡</option>
                     <option value=".transfer-card">编辑：转账卡片</option>
                 </select>
                 <button class="btn-small danger" id="btn-reset" onclick="resetCurrentState()">重置</button>
@@ -429,6 +427,13 @@
         <details>
             <summary>贴图与图像</summary>
             <div class="details-content texture-grid">
+                <div class="control-group" style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <label style="color: #333; font-weight: bold;">当前调整的贴图目标：</label>
+                    <select id="texture-target-selector" class="sub-select" onchange="loadStateToUI()" style="margin-top: 5px; border-color: #ccc;">
+                        <option value="long">通用 / 长气泡贴图</option>
+                        <option value="short">短气泡专属贴图 (覆盖通用)</option>
+                    </select>
+                </div>
                 <div class="texture-block">
                     <h4>贴图 1：背景层</h4>
                     <div class="control-group">
@@ -751,7 +756,8 @@
             return {
                 bgColor: '#ffffff', bgColor2: '#f0f0f0', useGradient: false, bgOpacity: 1, bgOpacity2: 1, blur: 0, saturate: 100, blendMode: 'normal',
                 textures: createDefaultTextures(),
-fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoration: 'none', textTransform: 'none',
+                shortTextures: createDefaultTextures(), // 新增：短气泡专属贴图
+                fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoration: 'none', textTransform: 'none',
                 textShadowColor: '#000000', textShadow: 0, weight: 400, spacing: 0, lineHeight: 1.5, fontSize: 0.9,
                 fontItalic: false, textStrokeColor: '#000000', textStroke: 0,
                 borderWidth: 0, borderColor: '#000000', borderStyle: 'solid', radius: 15, padding: 12, maxWidth: 85, enableTail: true,
@@ -763,19 +769,20 @@ fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoratio
         function normalizeState(rawState = {}) {
             const state = cloneDefaultState();
             Object.keys(state).forEach(key => {
-                if (rawState[key] !== undefined && key !== 'textures') state[key] = rawState[key];
+                if (rawState[key] !== undefined && key !== 'textures' && key !== 'shortTextures') state[key] = rawState[key];
             });
             if (Array.isArray(rawState.textures)) {
                 state.textures = createDefaultTextures().map((layer, index) => ({ ...layer, ...(rawState.textures[index] || {}) }));
+            }
+            if (Array.isArray(rawState.shortTextures)) {
+                state.shortTextures = createDefaultTextures().map((layer, index) => ({ ...layer, ...(rawState.shortTextures[index] || {}) }));
             }
             return state;
         }
 
         let states = {
             '.message-bubble.received': normalizeState({ bgColor: '#ffffff', textColor: '#333333' }),
-            '.message-bubble.received.short': normalizeState({ bgColor: '#ffffff', textColor: '#333333' }),
             '.message-bubble.sent': normalizeState({ bgColor: '#1A1C1A', textColor: '#ffffff' }),
-            '.message-bubble.sent.short': normalizeState({ bgColor: '#1A1C1A', textColor: '#ffffff' }),
             '.transfer-card': normalizeState({ bgColor: '#ffffff', radius: 12, padding: 15, maxWidth: 100, enableTail: false })
         };
 
@@ -807,11 +814,11 @@ fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoratio
 
         let lockState = { global: false };
 
-        // 防弹级元素获取函数：找不到元素也不会报错卡死
         const getEl = (id) => document.getElementById(id);
         
         const els = {
             target: getEl('target-selector'),
+            textureTarget: getEl('texture-target-selector'), // 新增：贴图目标选择器
             bgColor: getEl('ctrl-bg-color'), bgColor2: getEl('ctrl-bg-color2'),
             useGradient: getEl('ctrl-use-gradient'), bgOpacity: getEl('ctrl-bg-opacity'), bgOpacity2: getEl('ctrl-bg-opacity2'),
             blur: getEl('ctrl-blur'), saturate: getEl('ctrl-saturate'), blendMode: getEl('ctrl-blend-mode'),
@@ -859,7 +866,9 @@ fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoratio
             if(els.saturate) els.saturate.value = state.saturate !== undefined ? state.saturate : 100;
             els.blendMode.value = state.blendMode;
 
-            state.textures.forEach((layer, index) => {
+            const activeTextures = (els.textureTarget && els.textureTarget.value === 'short') ? state.shortTextures : state.textures;
+
+            activeTextures.forEach((layer, index) => {
                 els.bgImages[index].value = layer.image; els.bgSizes[index].value = layer.size;
                 els.bgXs[index].value = layer.x; els.bgYs[index].value = layer.y; els.bgRepeats[index].value = layer.repeat;
                 if (index > 0) { els.bgOpacities[index].value = layer.opacity; els.bgRotates[index].value = layer.rotate; }
@@ -915,7 +924,9 @@ fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoratio
             if(document.getElementById('val-shadow-blur-spread')) document.getElementById('val-shadow-blur-spread').innerText = `${state.shadowBlur}px, ${state.shadowSpread || 0}px`;
             document.getElementById('val-shadow-xy').innerText = `${state.shadowX}px, ${state.shadowY}px`;
 
-            state.textures.forEach((layer, index) => {
+            const activeTextures = (els.textureTarget && els.textureTarget.value === 'short') ? state.shortTextures : state.textures;
+
+            activeTextures.forEach((layer, index) => {
                 document.getElementById(`val-bg-size-${index + 1}`).innerText = layer.size + '%';
                 document.getElementById(`val-bg-x-${index + 1}`).innerText = layer.x + '%';
                 document.getElementById(`val-bg-y-${index + 1}`).innerText = layer.y + '%';
@@ -937,8 +948,11 @@ fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoratio
             if(els.saturate) state.saturate = Number(els.saturate.value);
             state.blendMode = els.blendMode.value;
 
-            state.textures = state.textures.map((layer, index) => {
-                if (!els.bgImages[index]) return layer; // 防崩溃保护
+            const isShort = els.textureTarget && els.textureTarget.value === 'short';
+            const targetTextures = isShort ? state.shortTextures : state.textures;
+
+            const updatedTextures = targetTextures.map((layer, index) => {
+                if (!els.bgImages[index]) return layer;
                 const currentInputValue = els.bgImages[index].value;
                 const finalImage = currentInputValue === '[本地图片已上传]' ? layer.image : currentInputValue;
                 return {
@@ -952,6 +966,12 @@ fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoratio
                     rotate: (index > 0 && els.bgRotates[index]) ? Number(els.bgRotates[index].value) : layer.rotate
                 };
             });
+
+            if (isShort) {
+                state.shortTextures = updatedTextures;
+            } else {
+                state.textures = updatedTextures;
+            }
 
             if(els.fontFamily) state.fontFamily = els.fontFamily.value;
             state.textColor = els.textColor.value; 
@@ -1003,12 +1023,15 @@ fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoratio
             overlayEl.style.pointerEvents = 'none';
         }
 
-               function renderPreviewAndCSS() {
+        function renderPreviewAndCSS() {
             let finalCSS = '/* 由尾骨痣の章鱼uwu气泡生成器设计 - 请保留此字符，勿删除，使用生成器请注明尾骨痣 */\n\n';
-            for (const [selector, state] of Object.entries(states)) {
+            
+            const generateCSSForState = (selector, state, isShort = false) => {
                 const rgbaBg1 = hexToRgba(state.bgColor, state.bgOpacity);
                 let rgbaBg2 = hexToRgba(state.bgColor2, state.bgOpacity);
-                const bgTex = state.textures[0];
+                const activeTextures = isShort ? state.shortTextures : state.textures;
+                const bgTex = activeTextures[0];
+                
                 let bgRule = `/* 背景颜色 */\n    background-color: ${rgbaBg1} !important;`;
                 
                 if (bgTex.image.trim() !== '' || state.useGradient) {
@@ -1029,8 +1052,8 @@ fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoratio
                 
                 let radiusRule = `${state.radius}px`;
                 if (state.enableTail !== false) {
-                    if (selector === '.message-bubble.received') radiusRule = `${state.radius}px ${state.radius}px ${state.radius}px 0`;
-                    if (selector === '.message-bubble.sent') radiusRule = `${state.radius}px ${state.radius}px 0 ${state.radius}px`;
+                    if (selector.includes('.received')) radiusRule = `${state.radius}px ${state.radius}px ${state.radius}px 0`;
+                    if (selector.includes('.sent')) radiusRule = `${state.radius}px ${state.radius}px 0 ${state.radius}px`;
                 }
 
                 const shadowSpread = state.shadowSpread || 0;
@@ -1096,12 +1119,13 @@ fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoratio
                     const satVal = state.saturate !== undefined ? state.saturate : 100;
                     cssBlock += `    /* 毛玻璃模糊度与饱和度 */\n    backdrop-filter: blur(${blurVal}px) saturate(${satVal}%) !important;\n    -webkit-backdrop-filter: blur(${blurVal}px) saturate(${satVal}%) !important;\n`;
                 }
-                finalCSS += `${selector} {\n${cssBlock}}\n`;
+                
+                let outputCSS = `${selector} {\n${cssBlock}}\n`;
 
                 [1, 2].forEach(i => {
-                    const tex = state.textures[i];
+                    const tex = activeTextures[i];
                     if (tex.image.trim() !== '') {
-                        finalCSS += `
+                        outputCSS += `
 /* 贴图层 ${i} */
 ${selector}::${i===1?'before':'after'} {
     content: "" !important; position: absolute !important; inset: -30px !important; pointer-events: none !important; z-index: ${i === 1 ? 0 : 1} !important;
@@ -1110,37 +1134,49 @@ ${selector}::${i===1?'before':'after'} {
 }\n`;
                     }
                 });
+                return { cssBlock, outputCSS, activeTextures };
+            };
+
+            for (const [selector, state] of Object.entries(states)) {
+                const longData = generateCSSForState(selector, state, false);
+                finalCSS += longData.outputCSS;
+                
+                if (selector !== '.transfer-card') {
+                    const shortSelector = selector + '.short';
+                    const shortData = generateCSSForState(shortSelector, state, true);
+                    finalCSS += shortData.outputCSS;
+                }
 
                 let targetIds = [];
                 if (selector === '.transfer-card') {
                     targetIds = ['preview-transfer-received', 'preview-transfer-sent'];
                 } else if (selector === '.message-bubble.received') {
-                    targetIds = ['preview-received-long'];
-                } else if (selector === '.message-bubble.received.short') {
-                    targetIds = ['preview-received-short'];
+                    targetIds = ['preview-received-short', 'preview-received-long'];
                 } else if (selector === '.message-bubble.sent') {
-                    targetIds = ['preview-sent-long'];
-                } else if (selector === '.message-bubble.sent.short') {
-                    targetIds = ['preview-sent-short'];
+                    targetIds = ['preview-sent-short', 'preview-sent-long'];
                 }
 
                 targetIds.forEach(targetId => {
                     const el = document.getElementById(targetId);
                     if (el) {
-                        el.style.cssText = cssBlock.replace(/!important/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+                        const isShortEl = el.classList.contains('short');
+                        const activeData = isShortEl ? generateCSSForState(selector, state, true) : longData;
+                        
+                        el.style.cssText = activeData.cssBlock.replace(/!important/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
                         
                         const textEl = el.querySelector('.bubble-text') || el.querySelector('.transfer-content');
                         if (textEl) {
                             textEl.style.setProperty('color', state.textColor, 'important');
                         }
 
-                        applyOverlayPreview(targetId, 2, state.textures[1], state.blendMode);
-                        applyOverlayPreview(targetId, 3, state.textures[2], state.blendMode);
+                        applyOverlayPreview(targetId, 2, activeData.activeTextures[1], state.blendMode);
+                        applyOverlayPreview(targetId, 3, activeData.activeTextures[2], state.blendMode);
                     }
                 });
             }
             els.cssOutput.value = finalCSS;
         }
+
         const debouncedRender = debounce(() => { 
             const oldStatesStr = historyIndex >= 0 ? historyStack[historyIndex] : null;
             
@@ -1192,32 +1228,34 @@ ${selector}::${i===1?'before':'after'} {
         function copyStyleToOther() {
             if (lockState.global) return;
             const currentTarget = els.target.value;
-            const sourceState = JSON.parse(JSON.stringify(states[currentTarget]));
             
+            const mirrorX = (sourceState) => {
+                const newState = JSON.parse(JSON.stringify(sourceState));
+                newState.textures.forEach(tex => { tex.x = 100 - tex.x; });
+                if (newState.shortTextures) {
+                    newState.shortTextures.forEach(tex => { tex.x = 100 - tex.x; });
+                }
+                return normalizeState(newState);
+            };
+
             if (currentTarget === '.message-bubble.received') {
-                states['.message-bubble.sent'] = normalizeState(sourceState);
-                logAction('复制样式', '将对方气泡(长)样式复制给我方(长)');
+                states['.message-bubble.sent'] = mirrorX(states['.message-bubble.received']);
+                logAction('复制样式', '将对方气泡样式镜像复制给我方');
+                alert('气泡样式已镜像同步复制给我方（贴图左右已自动翻转）！');
             } else if (currentTarget === '.message-bubble.sent') {
-                states['.message-bubble.received'] = normalizeState(sourceState);
-                logAction('复制样式', '将我方气泡(长)样式复制给对方(长)');
-            } else if (currentTarget === '.message-bubble.received.short') {
-                states['.message-bubble.sent.short'] = normalizeState(sourceState);
-                logAction('复制样式', '将对方气泡(短)样式复制给我方(短)');
-            } else if (currentTarget === '.message-bubble.sent.short') {
-                states['.message-bubble.received.short'] = normalizeState(sourceState);
-                logAction('复制样式', '将我方气泡(短)样式复制给对方(短)');
+                states['.message-bubble.received'] = mirrorX(states['.message-bubble.sent']);
+                logAction('复制样式', '将我方气泡样式镜像复制给对方');
+                alert('气泡样式已镜像同步复制给对方（贴图左右已自动翻转）！');
             } else if (currentTarget === '.transfer-card') {
-                // 转账卡片没有“另一方”，所以直接把它的样式复制给所有气泡
+                const sourceState = JSON.parse(JSON.stringify(states[currentTarget]));
                 states['.message-bubble.received'] = normalizeState(sourceState);
-                states['.message-bubble.sent'] = normalizeState(sourceState);
-                states['.message-bubble.received.short'] = normalizeState(sourceState);
-                states['.message-bubble.sent.short'] = normalizeState(sourceState);
+                states['.message-bubble.sent'] = mirrorX(sourceState);
                 logAction('复制样式', '将转账卡片样式复制给所有气泡');
+                alert('转账卡片样式已成功复制给所有气泡！');
             }
             
             renderPreviewAndCSS(); 
             saveHistory();
-            alert('样式已成功复制！');
         }
 
         function exportJSON() {
@@ -1267,7 +1305,13 @@ ${selector}::${i===1?'before':'after'} {
                             compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
                         }
                         
-                        states[els.target.value].textures[index].image = compressedBase64;
+                        const isShort = els.textureTarget && els.textureTarget.value === 'short';
+                        if (isShort) {
+                            states[els.target.value].shortTextures[index].image = compressedBase64;
+                        } else {
+                            states[els.target.value].textures[index].image = compressedBase64;
+                        }
+                        
                         els.bgImages[index].value = '[本地图片已上传]';
                         updateState();
                         uploadEl.value = ''; 
