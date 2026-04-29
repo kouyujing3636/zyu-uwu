@@ -270,17 +270,31 @@
 
         <div class="mock-chat-area" id="preview-container">
             <div class="message-wrapper received">
-                <div class="message-bubble received" id="preview-received">
-                    <span class="bubble-text">这是一条极简风格的测试消息。留白即是高级。</span>
-                    <span class="overlay-layer overlay-2" id="preview-received-overlay-2"></span>
-                    <span class="overlay-layer overlay-3" id="preview-received-overlay-3"></span>
+                <div class="message-bubble received short" id="preview-received-short">
+                    <span class="bubble-text">你好！</span>
+                    <span class="overlay-layer overlay-2" id="preview-received-short-overlay-2"></span>
+                    <span class="overlay-layer overlay-3" id="preview-received-short-overlay-3"></span>
+                </div>
+            </div>
+            <div class="message-wrapper received">
+                <div class="message-bubble received" id="preview-received-long">
+                    <span class="bubble-text">这是一条极简风格的测试消息。留白即是高级。用来测试长文本情况下的贴图拉伸与气泡排版效果是否完美。</span>
+                    <span class="overlay-layer overlay-2" id="preview-received-long-overlay-2"></span>
+                    <span class="overlay-layer overlay-3" id="preview-received-long-overlay-3"></span>
                 </div>
             </div>
             <div class="message-wrapper sent">
-                <div class="message-bubble sent" id="preview-sent">
-                    <span class="bubble-text">I completely agree. Less is more.</span>
-                    <span class="overlay-layer overlay-2" id="preview-sent-overlay-2"></span>
-                    <span class="overlay-layer overlay-3" id="preview-sent-overlay-3"></span>
+                <div class="message-bubble sent short" id="preview-sent-short">
+                    <span class="bubble-text">Hi!</span>
+                    <span class="overlay-layer overlay-2" id="preview-sent-short-overlay-2"></span>
+                    <span class="overlay-layer overlay-3" id="preview-sent-short-overlay-3"></span>
+                </div>
+            </div>
+            <div class="message-wrapper sent">
+                <div class="message-bubble sent" id="preview-sent-long">
+                    <span class="bubble-text">I completely agree. Less is more. This is a longer message to test how the background texture scales and fits within a larger bubble.</span>
+                    <span class="overlay-layer overlay-2" id="preview-sent-long-overlay-2"></span>
+                    <span class="overlay-layer overlay-3" id="preview-sent-long-overlay-3"></span>
                 </div>
             </div>
             <div class="message-wrapper received">
@@ -313,8 +327,10 @@
         <div class="target-selector-wrap">
             <div class="target-top-row">
                 <select id="target-selector" class="main-select" onchange="loadStateToUI()">
-                    <option value=".message-bubble.received">编辑：对方气泡</option>
-                    <option value=".message-bubble.sent">编辑：我方气泡</option>
+                    <option value=".message-bubble.received">编辑：对方气泡 (长)</option>
+                    <option value=".message-bubble.received.short">编辑：对方气泡 (短)</option>
+                    <option value=".message-bubble.sent">编辑：我方气泡 (长)</option>
+                    <option value=".message-bubble.sent.short">编辑：我方气泡 (短)</option>
                     <option value=".transfer-card">编辑：转账卡片</option>
                 </select>
                 <button class="btn-small danger" id="btn-reset" onclick="resetCurrentState()">重置</button>
@@ -372,11 +388,7 @@
             <summary>颜色与背景</summary>
             <div class="details-content">
                 <div class="control-group">
-                    <label>整体透明度 <span class="val-display" id="val-global-opacity">1</span></label>
-                    <input type="range" id="ctrl-global-opacity" min="0" max="1" step="0.05" value="1" oninput="updateState()">
-                </div>
-                <div class="control-group">
-                    <label>背景色 1 & 透明度 <span class="val-display" id="val-bg-opacity">1</span></label>
+                    <label>背景色 1 & 透明度 (不影响文字) <span class="val-display" id="val-bg-opacity">1</span></label>
                     <div class="flex-row">
                         <input type="color" id="ctrl-bg-color" onchange="updateState()">
                         <input type="range" id="ctrl-bg-opacity" min="0" max="1" step="0.05" oninput="updateState()">
@@ -393,6 +405,10 @@
                 <div class="control-group">
                     <label>毛玻璃模糊度 <span class="val-display" id="val-blur">0px</span></label>
                     <input type="range" id="ctrl-blur" min="0" max="30" step="1" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>毛玻璃饱和度 (提升通透感) <span class="val-display" id="val-saturate">100%</span></label>
+                    <input type="range" id="ctrl-saturate" min="0" max="200" step="10" value="100" oninput="updateState()">
                 </div>
                 <div class="control-group">
                     <label>背景混合模式</label>
@@ -534,6 +550,14 @@
             <summary>边框与间距</summary>
             <div class="details-content">
                 <div class="control-group">
+                    <label>最小高度 <span class="val-display" id="val-min-height">0px</span></label>
+                    <input type="range" id="ctrl-min-height" min="0" max="300" step="5" oninput="updateState()">
+                </div>
+                <div class="control-group">
+                    <label>上下外边距 <span class="val-display" id="val-margin-y">0px</span></label>
+                    <input type="range" id="ctrl-margin-y" min="0" max="50" step="1" oninput="updateState()">
+                </div>
+                <div class="control-group">
                     <label>最大宽度 <span class="val-display" id="val-max-width">85%</span></label>
                     <input type="range" id="ctrl-max-width" min="30" max="100" step="1" oninput="updateState()">
                 </div>
@@ -571,11 +595,50 @@
             <summary>阴影与排版</summary>
             <div class="details-content">
                 <div class="control-group">
+                    <label>字体选择 (Font Family)</label>
+                    <select id="ctrl-font-family" class="sub-select" onchange="updateState()">
+                        <option value="sans-serif">默认无衬线体 (现代/极简)</option>
+                        <option value="serif">衬线体 (优雅/复古)</option>
+                        <option value="monospace">等宽字体 (代码/打字机)</option>
+                        <option value="cursive">手写体 (活泼/随性)</option>
+                    </select>
+                </div>
+                <div class="control-group">
                     <label>文字颜色</label>
                     <input type="color" id="ctrl-text-color" onchange="updateState()">
                 </div>
                 <div class="control-group">
+                    <label>文字对齐方式</label>
+                    <select id="ctrl-text-align" class="sub-select" onchange="updateState()">
+                        <option value="left">左对齐</option>
+                        <option value="center">居中对齐</option>
+                        <option value="right">右对齐</option>
+                        <option value="justify">两端对齐</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>文字装饰线</label>
+                    <select id="ctrl-text-decoration" class="sub-select" onchange="updateState()">
+                        <option value="none">无</option>
+                        <option value="underline">下划线</option>
+                        <option value="line-through">删除线</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>英文大小写转换</label>
+                    <select id="ctrl-text-transform" class="sub-select" onchange="updateState()">
+                        <option value="none">默认原样</option>
+                        <option value="uppercase">全大写 (UPPERCASE)</option>
+                        <option value="lowercase">全小写 (lowercase)</option>
+                        <option value="capitalize">首字母大写 (Capitalize)</option>
+                    </select>
+                </div>
+                <div class="control-group">
                     <label>字体倾斜 (Italic) <input type="checkbox" id="ctrl-font-italic" onchange="updateState()"></label>
+                </div>
+                <div class="control-group">
+                    <label>气泡整体旋转角度 <span class="val-display" id="val-bubble-rotate">0°</span></label>
+                    <input type="range" id="ctrl-bubble-rotate" min="-45" max="45" step="1" value="0" oninput="updateState()">
                 </div>
                 <div class="control-group">
                     <label>字体大小 <span class="val-display" id="val-font-size">0.9rem</span></label>
@@ -647,9 +710,8 @@
         </details>
 
         <div class="footer">
-            尾骨痣 の章鱼uwu气泡生成器出品<br>联系方式:QQ 171519582 源代码鸣谢:ee、1900老师
+            尾骨痣の章鱼uwu气泡生成器<br>联系方式:171519582@qq.com 源代码鸣谢:ee、1900老师
         </div>
-
     </div>
 
     <div id="history-modal">
@@ -687,12 +749,13 @@
 
         function cloneDefaultState() {
             return {
-                globalOpacity: 1,
-                bgColor: '#ffffff', bgColor2: '#f0f0f0', useGradient: false, bgOpacity: 1, bgOpacity2: 1, blur: 0, blendMode: 'normal',
+                bgColor: '#ffffff', bgColor2: '#f0f0f0', useGradient: false, bgOpacity: 1, bgOpacity2: 1, blur: 0, saturate: 100, blendMode: 'normal',
                 textures: createDefaultTextures(),
-                textColor: '#333333', textShadowColor: '#000000', textShadow: 0, weight: 400, spacing: 0, lineHeight: 1.5, fontSize: 0.9,
+fontFamily: 'sans-serif', textColor: '#333333', textAlign: 'left', textDecoration: 'none', textTransform: 'none',
+                textShadowColor: '#000000', textShadow: 0, weight: 400, spacing: 0, lineHeight: 1.5, fontSize: 0.9,
                 fontItalic: false, textStrokeColor: '#000000', textStroke: 0,
                 borderWidth: 0, borderColor: '#000000', borderStyle: 'solid', radius: 15, padding: 12, maxWidth: 85, enableTail: true,
+                minHeight: 0, marginY: 0, bubbleRotate: 0,
                 enableShadow: true, shadowBlur: 0, shadowX: 0, shadowY: 4, shadowColor: '#000000', shadowOpacity: 0.1, shadowSpread: 0
             };
         }
@@ -710,7 +773,9 @@
 
         let states = {
             '.message-bubble.received': normalizeState({ bgColor: '#ffffff', textColor: '#333333' }),
+            '.message-bubble.received.short': normalizeState({ bgColor: '#ffffff', textColor: '#333333' }),
             '.message-bubble.sent': normalizeState({ bgColor: '#1A1C1A', textColor: '#ffffff' }),
+            '.message-bubble.sent.short': normalizeState({ bgColor: '#1A1C1A', textColor: '#ffffff' }),
             '.transfer-card': normalizeState({ bgColor: '#ffffff', radius: 12, padding: 15, maxWidth: 100, enableTail: false })
         };
 
@@ -747,10 +812,9 @@
         
         const els = {
             target: getEl('target-selector'),
-            globalOpacity: getEl('ctrl-global-opacity'),
             bgColor: getEl('ctrl-bg-color'), bgColor2: getEl('ctrl-bg-color2'),
             useGradient: getEl('ctrl-use-gradient'), bgOpacity: getEl('ctrl-bg-opacity'), bgOpacity2: getEl('ctrl-bg-opacity2'),
-            blur: getEl('ctrl-blur'), blendMode: getEl('ctrl-blend-mode'),
+            blur: getEl('ctrl-blur'), saturate: getEl('ctrl-saturate'), blendMode: getEl('ctrl-blend-mode'),
             bgImages: [getEl('ctrl-bg-image-1'), getEl('ctrl-bg-image-2'), getEl('ctrl-bg-image-3')],
             bgUploads: [getEl('ctrl-bg-upload-1'), getEl('ctrl-bg-upload-2'), getEl('ctrl-bg-upload-3')],
             bgSizes: [getEl('ctrl-bg-size-1'), getEl('ctrl-bg-size-2'), getEl('ctrl-bg-size-3')],
@@ -759,13 +823,16 @@
             bgRepeats: [getEl('ctrl-bg-repeat-1'), getEl('ctrl-bg-repeat-2'), getEl('ctrl-bg-repeat-3')],
             bgOpacities: [null, getEl('ctrl-bg-opacity-2'), getEl('ctrl-bg-opacity-3')],
             bgRotates: [null, getEl('ctrl-bg-rotate-2'), getEl('ctrl-bg-rotate-3')],
-            textColor: getEl('ctrl-text-color'), textShadowColor: getEl('ctrl-text-shadow-color'),
+            fontFamily: getEl('ctrl-font-family'), textColor: getEl('ctrl-text-color'),
+            textAlign: getEl('ctrl-text-align'), textDecoration: getEl('ctrl-text-decoration'), textTransform: getEl('ctrl-text-transform'),
+            textShadowColor: getEl('ctrl-text-shadow-color'),
             textShadow: getEl('ctrl-text-shadow'), weight: getEl('ctrl-weight'),
             spacing: getEl('ctrl-spacing'), lineHeight: getEl('ctrl-line-height'),
             fontSize: getEl('ctrl-font-size'), fontItalic: getEl('ctrl-font-italic'),
             textStrokeColor: getEl('ctrl-text-stroke-color'), textStroke: getEl('ctrl-text-stroke'),
             borderWidth: getEl('ctrl-border-width'), borderColor: getEl('ctrl-border-color'), borderStyle: getEl('ctrl-border-style'),
             radius: getEl('ctrl-radius'), padding: getEl('ctrl-padding'), maxWidth: getEl('ctrl-max-width'), enableTail: getEl('ctrl-enable-tail'),
+            minHeight: getEl('ctrl-min-height'), marginY: getEl('ctrl-margin-y'), bubbleRotate: getEl('ctrl-bubble-rotate'),
             enableShadow: getEl('ctrl-enable-shadow'), shadowColor: getEl('ctrl-shadow-color'),
             shadowBlur: getEl('ctrl-shadow-blur'), shadowX: getEl('ctrl-shadow-x'),
             shadowY: getEl('ctrl-shadow-y'), shadowOpacity: getEl('ctrl-shadow-opacity'), shadowSpread: getEl('ctrl-shadow-spread'),
@@ -785,11 +852,12 @@
 
         function loadStateToUI() {
             const state = states[els.target.value];
-            if(els.globalOpacity) els.globalOpacity.value = state.globalOpacity !== undefined ? state.globalOpacity : 1;
             els.bgColor.value = state.bgColor; els.bgColor2.value = state.bgColor2;
             els.useGradient.checked = state.useGradient; els.bgOpacity.value = state.bgOpacity; 
             if(els.bgOpacity2) els.bgOpacity2.value = state.bgOpacity2 !== undefined ? state.bgOpacity2 : 1;
-            els.blur.value = state.blur; els.blendMode.value = state.blendMode;
+            els.blur.value = state.blur; 
+            if(els.saturate) els.saturate.value = state.saturate !== undefined ? state.saturate : 100;
+            els.blendMode.value = state.blendMode;
 
             state.textures.forEach((layer, index) => {
                 els.bgImages[index].value = layer.image; els.bgSizes[index].value = layer.size;
@@ -798,7 +866,12 @@
                 if (els.bgUploads[index]) els.bgUploads[index].value = ''; 
             });
 
-            els.textColor.value = state.textColor; els.textShadowColor.value = state.textShadowColor;
+            if(els.fontFamily) els.fontFamily.value = state.fontFamily || 'sans-serif';
+            els.textColor.value = state.textColor; 
+            if(els.textAlign) els.textAlign.value = state.textAlign || 'left';
+            if(els.textDecoration) els.textDecoration.value = state.textDecoration || 'none';
+            if(els.textTransform) els.textTransform.value = state.textTransform || 'none';
+            els.textShadowColor.value = state.textShadowColor;
             els.textShadow.value = state.textShadow; els.weight.value = state.weight; els.spacing.value = state.spacing;
             els.lineHeight.value = state.lineHeight; els.fontSize.value = state.fontSize; 
             if(els.fontItalic) els.fontItalic.checked = state.fontItalic;
@@ -807,6 +880,9 @@
             els.borderWidth.value = state.borderWidth; els.borderColor.value = state.borderColor; 
             if(els.borderStyle) els.borderStyle.value = state.borderStyle;
             els.radius.value = state.radius; els.padding.value = state.padding; els.maxWidth.value = state.maxWidth; 
+            if(els.minHeight) els.minHeight.value = state.minHeight || 0;
+            if(els.marginY) els.marginY.value = state.marginY || 0;
+            if(els.bubbleRotate) els.bubbleRotate.value = state.bubbleRotate || 0;
             if(els.enableTail) els.enableTail.checked = state.enableTail;
             els.enableShadow.checked = state.enableShadow; els.shadowColor.value = state.shadowColor; 
             els.shadowBlur.value = state.shadowBlur; els.shadowX.value = state.shadowX; els.shadowY.value = state.shadowY;
@@ -817,10 +893,10 @@
         }
 
         function updateValueDisplays(state) {
-            if(document.getElementById('val-global-opacity')) document.getElementById('val-global-opacity').innerText = state.globalOpacity !== undefined ? state.globalOpacity : 1;
             document.getElementById('val-bg-opacity').innerText = state.bgOpacity;
             if(document.getElementById('val-bg-opacity2')) document.getElementById('val-bg-opacity2').innerText = state.bgOpacity2 !== undefined ? state.bgOpacity2 : 1;
             document.getElementById('val-blur').innerText = state.blur + 'px';
+            if(document.getElementById('val-saturate')) document.getElementById('val-saturate').innerText = (state.saturate !== undefined ? state.saturate : 100) + '%';
             document.getElementById('val-text-shadow').innerText = state.textShadow + 'px';
             if(document.getElementById('val-text-stroke')) document.getElementById('val-text-stroke').innerText = state.textStroke + 'px';
             document.getElementById('val-weight').innerText = state.weight;
@@ -831,6 +907,9 @@
             document.getElementById('val-radius').innerText = state.radius + 'px';
             document.getElementById('val-padding').innerText = state.padding + 'px';
             document.getElementById('val-max-width').innerText = state.maxWidth + '%';
+            if(document.getElementById('val-min-height')) document.getElementById('val-min-height').innerText = (state.minHeight || 0) + 'px';
+            if(document.getElementById('val-margin-y')) document.getElementById('val-margin-y').innerText = (state.marginY || 0) + 'px';
+            if(document.getElementById('val-bubble-rotate')) document.getElementById('val-bubble-rotate').innerText = (state.bubbleRotate || 0) + '°';
             
             if(document.getElementById('val-shadow-opacity')) document.getElementById('val-shadow-opacity').innerText = state.shadowOpacity !== undefined ? state.shadowOpacity : 0.1;
             if(document.getElementById('val-shadow-blur-spread')) document.getElementById('val-shadow-blur-spread').innerText = `${state.shadowBlur}px, ${state.shadowSpread || 0}px`;
@@ -851,11 +930,12 @@
             if (lockState.global) return loadStateToUI();
             const target = els.target.value; const state = states[target];
 
-            if(els.globalOpacity) state.globalOpacity = Number(els.globalOpacity.value);
             state.bgColor = els.bgColor.value; state.bgColor2 = els.bgColor2.value;
             state.useGradient = els.useGradient.checked; state.bgOpacity = Number(els.bgOpacity.value);
             if(els.bgOpacity2) state.bgOpacity2 = Number(els.bgOpacity2.value);
-            state.blur = Number(els.blur.value); state.blendMode = els.blendMode.value;
+            state.blur = Number(els.blur.value); 
+            if(els.saturate) state.saturate = Number(els.saturate.value);
+            state.blendMode = els.blendMode.value;
 
             state.textures = state.textures.map((layer, index) => {
                 if (!els.bgImages[index]) return layer; // 防崩溃保护
@@ -873,7 +953,12 @@
                 };
             });
 
-            state.textColor = els.textColor.value; state.textShadowColor = els.textShadowColor.value;
+            if(els.fontFamily) state.fontFamily = els.fontFamily.value;
+            state.textColor = els.textColor.value; 
+            if(els.textAlign) state.textAlign = els.textAlign.value;
+            if(els.textDecoration) state.textDecoration = els.textDecoration.value;
+            if(els.textTransform) state.textTransform = els.textTransform.value;
+            state.textShadowColor = els.textShadowColor.value;
             state.textShadow = Number(els.textShadow.value); state.weight = Number(els.weight.value);
             state.spacing = Number(els.spacing.value); state.lineHeight = Number(els.lineHeight.value);
             state.fontSize = Number(els.fontSize.value); 
@@ -883,6 +968,9 @@
             state.borderWidth = Number(els.borderWidth.value); state.borderColor = els.borderColor.value; 
             if(els.borderStyle) state.borderStyle = els.borderStyle.value;
             state.radius = Number(els.radius.value); state.padding = Number(els.padding.value); state.maxWidth = Number(els.maxWidth.value);
+            if(els.minHeight) state.minHeight = Number(els.minHeight.value);
+            if(els.marginY) state.marginY = Number(els.marginY.value);
+            if(els.bubbleRotate) state.bubbleRotate = Number(els.bubbleRotate.value);
             if(els.enableTail) state.enableTail = els.enableTail.checked;
             state.enableShadow = els.enableShadow.checked; state.shadowColor = els.shadowColor.value;
             state.shadowBlur = Number(els.shadowBlur.value); state.shadowX = Number(els.shadowX.value);
@@ -910,11 +998,12 @@
             overlayEl.style.mixBlendMode = blendMode;
             overlayEl.style.opacity = layer.opacity;
             overlayEl.style.transform = `rotate(${layer.rotate}deg)`;
-            overlayEl.style.zIndex = overlayIndex + 1; 
+            /* 修复层级：让贴图刚好在背景之上，文字之下 */
+            overlayEl.style.zIndex = overlayIndex === 2 ? 0 : 1; 
             overlayEl.style.pointerEvents = 'none';
         }
 
-        function renderPreviewAndCSS() {
+               function renderPreviewAndCSS() {
             let finalCSS = '/* 由尾骨痣の章鱼uwu气泡生成器设计 - 请保留此字符，勿删除，使用生成器请注明尾骨痣 */\n\n';
             for (const [selector, state] of Object.entries(states)) {
                 const rgbaBg1 = hexToRgba(state.bgColor, state.bgOpacity);
@@ -950,15 +1039,22 @@
                 
                 const fontStyle = state.fontItalic ? 'italic' : 'normal';
                 const textStroke = state.textStroke > 0 ? `-webkit-text-stroke: ${state.textStroke}px ${state.textStrokeColor} !important;` : '';
-                const globalOpacity = state.globalOpacity !== undefined ? `opacity: ${state.globalOpacity} !important;` : '';
-
+                
                 let cssBlock = `
     /* --- 基础背景 --- */
     ${bgRule}
     
     /* --- 文字排版 --- */
+    /* 字体选择 */
+    font-family: ${state.fontFamily === 'serif' ? 'var(--font-serif)' : state.fontFamily === 'monospace' ? 'monospace' : state.fontFamily === 'cursive' ? 'cursive' : 'var(--font-sans)'} !important;
     /* 文字颜色 */
-    color: ${state.textColor} !important; 
+    color: ${state.textColor} !important;
+    /* 文字对齐方式 */
+    text-align: ${state.textAlign || 'left'} !important;
+    /* 文字装饰线 */
+    text-decoration: ${state.textDecoration || 'none'} !important;
+    /* 英文大小写转换 */
+    text-transform: ${state.textTransform || 'none'} !important;
     /* 字体大小: 调大数值字体变大 */
     font-size: ${state.fontSize}rem !important; 
     /* 字体样式: 正常或斜体 */
@@ -983,14 +1079,23 @@
     padding: ${state.padding}px !important; 
     /* 最大宽度: 限制气泡最宽能占屏幕的百分比 */
     max-width: ${state.maxWidth}% !important; 
+    /* 最小高度 */
+    min-height: ${state.minHeight || 0}px !important;
+    /* 上下外边距 */
+    margin-top: ${state.marginY || 0}px !important;
+    margin-bottom: ${state.marginY || 0}px !important;
     /* 盒子阴影: X轴偏移(正数向右) Y轴偏移(正数向下) 模糊度 扩展大小 颜色 */
     box-shadow: ${shadow} !important;
     
-    /* --- 布局隔离 (勿动) --- */
+    /* --- 布局隔离与旋转 --- */
     position: relative !important; isolation: isolate !important; overflow: visible !important;
-    ${globalOpacity}
+    transform: rotate(${state.bubbleRotate || 0}deg) !important;
 `;
-                if (state.blur > 0) cssBlock += `    /* 毛玻璃模糊度 */\n    backdrop-filter: blur(${state.blur}px) !important;\n    -webkit-backdrop-filter: blur(${state.blur}px) !important;\n`;
+                if (state.blur > 0 || (state.saturate !== undefined && state.saturate !== 100)) {
+                    const blurVal = state.blur || 0;
+                    const satVal = state.saturate !== undefined ? state.saturate : 100;
+                    cssBlock += `    /* 毛玻璃模糊度与饱和度 */\n    backdrop-filter: blur(${blurVal}px) saturate(${satVal}%) !important;\n    -webkit-backdrop-filter: blur(${blurVal}px) saturate(${satVal}%) !important;\n`;
+                }
                 finalCSS += `${selector} {\n${cssBlock}}\n`;
 
                 [1, 2].forEach(i => {
@@ -999,31 +1104,40 @@
                         finalCSS += `
 /* 贴图层 ${i} */
 ${selector}::${i===1?'before':'after'} {
-    content: "" !important; position: absolute !important; inset: -30px !important; pointer-events: none !important; z-index: ${i+2} !important;
+    content: "" !important; position: absolute !important; inset: -30px !important; pointer-events: none !important; z-index: ${i === 1 ? 0 : 1} !important;
     background: url('${tex.image.replace(/'/g, "\\'")}') ${tex.x}% ${tex.y}% / ${tex.size}% ${tex.repeat} !important;
     mix-blend-mode: ${state.blendMode} !important; opacity: ${tex.opacity} !important; transform: rotate(${tex.rotate}deg) !important;
 }\n`;
                     }
                 });
 
+                let targetIds = [];
                 if (selector === '.transfer-card') {
-                    ['preview-transfer-received', 'preview-transfer-sent'].forEach(targetId => {
-                        const el = document.getElementById(targetId);
-                        if (el) {
-                            el.style.cssText = cssBlock.replace(/!important/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
-                            applyOverlayPreview(targetId, 2, state.textures[1], state.blendMode);
-                            applyOverlayPreview(targetId, 3, state.textures[2], state.blendMode);
-                        }
-                    });
-                } else {
-                    const targetId = selector.includes('received') ? 'preview-received' : 'preview-sent';
+                    targetIds = ['preview-transfer-received', 'preview-transfer-sent'];
+                } else if (selector === '.message-bubble.received') {
+                    targetIds = ['preview-received-long'];
+                } else if (selector === '.message-bubble.received.short') {
+                    targetIds = ['preview-received-short'];
+                } else if (selector === '.message-bubble.sent') {
+                    targetIds = ['preview-sent-long'];
+                } else if (selector === '.message-bubble.sent.short') {
+                    targetIds = ['preview-sent-short'];
+                }
+
+                targetIds.forEach(targetId => {
                     const el = document.getElementById(targetId);
                     if (el) {
                         el.style.cssText = cssBlock.replace(/!important/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+                        
+                        const textEl = el.querySelector('.bubble-text') || el.querySelector('.transfer-content');
+                        if (textEl) {
+                            textEl.style.setProperty('color', state.textColor, 'important');
+                        }
+
                         applyOverlayPreview(targetId, 2, state.textures[1], state.blendMode);
                         applyOverlayPreview(targetId, 3, state.textures[2], state.blendMode);
                     }
-                }
+                });
             }
             els.cssOutput.value = finalCSS;
         }
@@ -1071,26 +1185,39 @@ ${selector}::${i===1?'before':'after'} {
         function resetCurrentState() {
             if (lockState.global) return;
             states[els.target.value] = cloneDefaultState();
-            if (els.target.value === '.message-bubble.sent') { states[els.target.value].bgColor = '#1A1C1A'; states[els.target.value].textColor = '#ffffff'; }
+            if (els.target.value.includes('.sent')) { states[els.target.value].bgColor = '#1A1C1A'; states[els.target.value].textColor = '#ffffff'; }
             loadStateToUI(); renderPreviewAndCSS(); saveHistory();
         }
 
         function copyStyleToOther() {
             if (lockState.global) return;
             const currentTarget = els.target.value;
+            const sourceState = JSON.parse(JSON.stringify(states[currentTarget]));
+            
             if (currentTarget === '.message-bubble.received') {
-                states['.message-bubble.sent'] = normalizeState(JSON.parse(JSON.stringify(states['.message-bubble.received'])));
-                logAction('复制样式', '将对方气泡样式复制给我方');
+                states['.message-bubble.sent'] = normalizeState(sourceState);
+                logAction('复制样式', '将对方气泡(长)样式复制给我方(长)');
             } else if (currentTarget === '.message-bubble.sent') {
-                states['.message-bubble.received'] = normalizeState(JSON.parse(JSON.stringify(states['.message-bubble.sent'])));
-                logAction('复制样式', '将我方气泡样式复制给对方');
-            } else {
-                alert('转账卡片无法复制给气泡');
-                return;
+                states['.message-bubble.received'] = normalizeState(sourceState);
+                logAction('复制样式', '将我方气泡(长)样式复制给对方(长)');
+            } else if (currentTarget === '.message-bubble.received.short') {
+                states['.message-bubble.sent.short'] = normalizeState(sourceState);
+                logAction('复制样式', '将对方气泡(短)样式复制给我方(短)');
+            } else if (currentTarget === '.message-bubble.sent.short') {
+                states['.message-bubble.received.short'] = normalizeState(sourceState);
+                logAction('复制样式', '将我方气泡(短)样式复制给对方(短)');
+            } else if (currentTarget === '.transfer-card') {
+                // 转账卡片没有“另一方”，所以直接把它的样式复制给所有气泡
+                states['.message-bubble.received'] = normalizeState(sourceState);
+                states['.message-bubble.sent'] = normalizeState(sourceState);
+                states['.message-bubble.received.short'] = normalizeState(sourceState);
+                states['.message-bubble.sent.short'] = normalizeState(sourceState);
+                logAction('复制样式', '将转账卡片样式复制给所有气泡');
             }
+            
             renderPreviewAndCSS(); 
             saveHistory();
-            alert('样式已成功复制到另一方！');
+            alert('样式已成功复制！');
         }
 
         function exportJSON() {
